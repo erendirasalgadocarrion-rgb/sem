@@ -771,7 +771,7 @@ tr:last-child td{border-bottom:none;}
   <!-- Sección productos -->
   <div id="re-card-productos">
     <div class="ct" style="justify-content:space-between;margin-bottom:12px;">
-      <span class="ct-left">Productos</span>
+      <span class="ct-left">Detalle de Productos / Servicios</span>
       <div style="display:flex;gap:8px;">
         <button class="btn bo bsm" onclick="rqImportarXMLEdit()">📎 Importar XML SAT</button>
         <input type="file" id="xml-input-edit" accept=".xml" style="display:none;" onchange="rqProcesarXMLEdit(this)">
@@ -824,7 +824,7 @@ tr:last-child td{border-bottom:none;}
     <button class="btn bo" onclick="cm('m-req-det')">Cerrar</button>
     <button class="btn bgold" onclick="rqImprimirDet()">🖨 Imprimir requisición</button>
     <button class="btn bs" id="btn-orden-pago" onclick="rqImprimirOrdenPago()" style="display:none;">💵 Imprimir Orden de Pago</button>
-    <button class="btn bp" id="btn-ir-orden" onclick="showSec('sec-adquisiciones',null);cm('m-req-det')" style="display:none;">🛒 Ir a Orden de Compra</button>
+    <button class="btn bp" id="btn-ir-orden" onclick="cm('m-req-det')">🛒 Ir a Orden de Compra</button>
   </div>
 </div></div>
 <!-- MODAL: Fondo -->
@@ -2198,12 +2198,6 @@ function rqVerDet(id){
   for(var i=0;i<reqs.length;i++){if(reqs[i].id===id){r=reqs[i];break;}}
   if(!r){toast("Requisición no encontrada","err");return;}
   rqDetId=id;
-  var prodsHtml=r.productos.map(function(p){
-    return"<tr><td style='text-align:center;'>"+p.cantidad+"</td><td style='text-align:center;'>"+p.um+"</td>"
-      +"<td>"+p.descripcion+"</td><td>"+p.uso+"</td>"
-      +"<td style='text-align:right;'>"+fmt(parseFloat(p.precio||0))+"</td>"
-      +"<td style='text-align:right;font-weight:700;'>"+fmt(parseFloat(p.importe||0))+"</td></tr>";
-  }).join("");
   // Buscar fecha de solicitud original
   var solVD=getSols().find(function(s){return s.id===r.solId;});
   var fechaSolVD=solVD?solVD.fecha:"—";
@@ -2248,7 +2242,7 @@ function rqVerDet(id){
       +"<div class='si-item'><label>Área supervisora</label><span>"+(dsVD.areaSupervisora||"—")+"</span></div>"
       +"</div></div>":"")
     // Tabla productos
-    +"<div style='font-size:11px;font-weight:700;color:var(--vino);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--border);text-align:left;'>Detalle de Productos / Servicios</div>"
+    +"<div class='ct' style='margin-bottom:8px;'>Detalle de Productos / Servicios</div>"
     +"<div class='tw' style='margin-bottom:12px;'><table>"
     +"<thead><tr><th style='text-align:center;width:55px;'>Cant.</th><th style='width:65px;'>U.M.</th><th style='width:35%;'>Descripción</th><th>Uso</th><th style='text-align:right;width:90px;'>Precio</th><th style='text-align:right;width:100px;'>Importe</th></tr></thead>"
     +"<tbody>"+prodsHtmlVD+"</tbody>"
@@ -2260,15 +2254,12 @@ function rqVerDet(id){
     +"</tfoot></table></div>";
   // Botón generar: texto según tipo de pago
   var btnIrOrden=document.getElementById("btn-ir-orden");
-  var btnGen=document.getElementById("btn-req-orden");
   var btnPago=document.getElementById("btn-orden-pago");
   var esCredito=r.tipoPago==="CREDITO";
-  btnGen.textContent=esCredito?"📋 Generar Orden de Compra":"📄 Generar Orden de Pago";
-  if(btnGen) btnGen.style.display="none";
-  if(btnIrOrden) btnIrOrden.style.display="inline-flex";
-  // Botón imprimir: texto según tipo de pago
-  btnPago.textContent=esCredito?"🖨 Imprimir Orden de Compra":"💵 Imprimir Orden de Pago";
-  btnPago.style.display=r.ordenGenerada?"inline-flex":"none";
+  if(btnPago){
+    btnPago.textContent=esCredito?"🖨 Imprimir Orden de Compra":"💵 Imprimir Orden de Pago";
+    btnPago.style.display=r.ordenGenerada?"inline-flex":"none";
+  }
   om("m-req-det");
 }
 function rqGenerarOrden(){
@@ -2621,7 +2612,7 @@ function setLogo(){
 // CSS base compartido para todos los entregables impresos
 function printCSS(extras){
   return "*{box-sizing:border-box;margin:0;padding:0;}"
-    +"body{font-family:Arial,sans-serif;font-size:12px;color:#1f2937;padding:20px 36px 180px;max-width:900px;margin:0 auto;min-height:100vh;position:relative;word-wrap:break-word;overflow-wrap:break-word;}"
+    +"body{font-family:Arial,sans-serif;font-size:12px;color:#1f2937;padding:20px 36px 40px;max-width:900px;margin:0 auto;min-height:100vh;position:relative;word-wrap:break-word;overflow-wrap:break-word;}"
     +".hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #6B0F1A;padding-bottom:12px;margin-bottom:16px;}"
     +".hdr-logo{width:170px;height:85px;flex-shrink:0;}"
     +".hdr-mid{flex:1;padding:0 16px;}"
@@ -2630,7 +2621,7 @@ function printCSS(extras){
     +".hdr-folio{text-align:right;flex-shrink:0;}"
     +".hdr-folio .lbl{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;}"
     +".hdr-folio .num{font-size:22px;font-weight:700;color:#6B0F1A;line-height:1;margin-top:2px;}"
-    +".firmas-pie{position:fixed;bottom:20px;left:36px;right:36px;}"
+    +".firmas-pie{margin-top:40px;padding-top:10px;border-top:1px solid #e5e7eb;}"
     +".firmas-grid{display:grid;gap:16px;}"
     +".firmas-grid.col4{grid-template-columns:1fr 1fr 1fr 1fr;}"
     +".firmas-grid.col3{grid-template-columns:1fr 1fr 1fr;}"
@@ -2642,7 +2633,7 @@ function printCSS(extras){
     +".pie{text-align:center;font-size:9px;color:#9ca3af;margin-top:10px;padding-top:8px;border-top:1px solid #e5e7eb;}"
     +"@media print{"
     +"  body{padding:15px 20px 160px;}"
-    +"  .firmas-pie{position:fixed;bottom:15px;left:20px;right:20px;}"
+    +"  .firmas-pie{margin-top:30px;}"
     +"}"
     +(extras||"");
 }
@@ -2989,7 +2980,7 @@ function rqBuildPrintServicio(data){
     +".datos{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:12px;margin-bottom:16px;}"
     +".dato label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;display:block;margin-bottom:2px;}"
     +".dato span{font-size:11px;font-weight:600;}"
-    +".sec-title{font-size:11px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1.5px solid #e8cfd3;}"
+    +".sec-title{font-size:11px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1.5px solid #e8cfd3;text-align:left;}"
     +"table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;}"
     +"thead th{background:#6B0F1A;color:white;padding:7px 9px;text-align:left;font-size:10px;}"
     +"td{padding:6px 9px;border-bottom:1px solid #e5e7eb;word-break:break-word;max-width:0;}"
