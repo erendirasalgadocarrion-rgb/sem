@@ -517,7 +517,7 @@ tr:last-child td{border-bottom:none;}
     <div class="ct">Solicitudes pendientes</div>
     <div class="fb">
       <input type="text" id="aq" placeholder="Buscar folio, área, solicitante..." oninput="rApr()">
-      <select id="aes" onchange="rApr()">
+      <select id="aes" onchange="this.setAttribute('data-touched','1');rApr()">
         <option value="">Todos los estados</option>
         <option>PENDIENTE</option>
         <option>APROBADO</option>
@@ -1343,12 +1343,14 @@ function rApr(){
   var area=(document.getElementById("aarea")||{value:""}).value;
   var de=(document.getElementById("ade")||{value:""}).value;
   var ha=(document.getElementById("aha")||{value:""}).value;
-  // Si no hay filtro de estado, mostrar PENDIENTE por defecto
-  var esFiltro=es||(q&&q.length>0)||area||de||ha;
-  var esEfectivo=es||(esFiltro?"":"")||"";
+  // Por defecto mostrar PENDIENTE; si el usuario seleccionó un estado usar ese
+  // "Todos los estados" tiene value="" pero se distingue del estado inicial
+  // usando el atributo data-touched del select
+  var selEs=document.getElementById("aes");
+  var touched=selEs?selEs.getAttribute("data-touched"):"";
+  var estadoEfectivo=es?(es):(touched?"":"PENDIENTE");
   var sols=getSols().filter(function(s){
-    var estadoFiltro=es||(esFiltro?"":"PENDIENTE");
-    if(estadoFiltro&&s.estado!==estadoFiltro) return false;
+    if(estadoEfectivo&&s.estado!==estadoEfectivo) return false;
     if(area&&s.area!==area) return false;
     if(de&&s.fecha<de) return false;
     if(ha&&s.fecha>ha) return false;
@@ -1535,12 +1537,14 @@ function rHist(){
   var area=(document.getElementById("harea")||{value:""}).value;
   var de=(document.getElementById("hde")||{value:""}).value;
   var ha=(document.getElementById("hha")||{value:""}).value;
-  // Si no hay filtro de estado, mostrar PENDIENTE por defecto
-  var esFiltro=es||(q&&q.length>0)||area||de||ha;
-  var esEfectivo=es||(esFiltro?"":"")||"";
+  // Por defecto mostrar PENDIENTE; si el usuario seleccionó un estado usar ese
+  // "Todos los estados" tiene value="" pero se distingue del estado inicial
+  // usando el atributo data-touched del select
+  var selEs=document.getElementById("aes");
+  var touched=selEs?selEs.getAttribute("data-touched"):"";
+  var estadoEfectivo=es?(es):(touched?"":"PENDIENTE");
   var sols=getSols().filter(function(s){
-    var estadoFiltro=es||(esFiltro?"":"PENDIENTE");
-    if(estadoFiltro&&s.estado!==estadoFiltro) return false;
+    if(estadoEfectivo&&s.estado!==estadoEfectivo) return false;
     if(area&&s.area!==area) return false;
     if(de&&s.fecha<de) return false;
     if(ha&&s.fecha>ha) return false;
