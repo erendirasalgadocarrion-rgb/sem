@@ -620,7 +620,7 @@ tr:last-child td{border-bottom:none;}
       <div class="ct"><span class="ct-left">Datos de Ejecución del Servicio</span></div>
       <div class="fg">
         <div class="fi full"><label>Lugar donde se prestará el servicio *</label><input type="text" id="rq-lugar-serv" placeholder="Dirección o lugar específico"></div>
-        <div class="fi"><label>Fecha inicio *</label><input type="date" id="rq-fecha-ini-serv"></div>
+        <div class="fi"><label>Fecha inicio *</label><input type="date" id="rq-fecha-ini-serv" onchange="document.getElementById('rq-fecha-fin-serv').min=this.value"></div>
         <div class="fi"><label>Fecha fin *</label><input type="date" id="rq-fecha-fin-serv"></div>
         <div class="fi"><label>Duración estimada</label><input type="text" id="rq-duracion-serv" placeholder="Ej. 5 días hábiles"></div>
         <div class="fi full"><label>Área responsable de supervisión *</label><select id="rq-area-sup"></select></div>
@@ -795,7 +795,7 @@ tr:last-child td{border-bottom:none;}
     <div class="ct" style="margin-bottom:12px;"><span class="ct-left">Datos de Ejecución del Servicio</span></div>
     <div class="fg">
       <div class="fi full"><label>Lugar donde se prestará el servicio *</label><input type="text" id="re-lugar-serv"></div>
-      <div class="fi"><label>Fecha inicio *</label><input type="date" id="re-fecha-ini-serv"></div>
+      <div class="fi"><label>Fecha inicio *</label><input type="date" id="re-fecha-ini-serv" onchange="document.getElementById('re-fecha-fin-serv').min=this.value"></div>
       <div class="fi"><label>Fecha fin *</label><input type="date" id="re-fecha-fin-serv"></div>
       <div class="fi"><label>Duración estimada</label><input type="text" id="re-duracion-serv"></div>
       <div class="fi full"><label>Área responsable de supervisión *</label><select id="re-area-sup"></select></div>
@@ -2038,6 +2038,7 @@ function rqGuardar(){
     var fechaIniServ=(document.getElementById("rq-fecha-ini-serv").value||"").trim();
     var fechaFinServ=(document.getElementById("rq-fecha-fin-serv").value||"").trim();
     if(!lugarServ||!fechaIniServ||!fechaFinServ){toast("Completa el lugar y fechas del servicio","err");return;}
+    if(fechaFinServ<fechaIniServ){toast("La fecha fin no puede ser anterior a la fecha inicio","err");return;}
   }
   var prods=[];
   document.querySelectorAll("#rq-prod-body tr").forEach(function(tr){
@@ -2699,8 +2700,9 @@ function rqEditarReq(id){
   document.getElementById("re-desc-gen").value=r.descripcion||"";
   // Aviso orden de pago
   document.getElementById("re-aviso-orden").style.display=r.ordenGenerada?"block":"none";
-  // Mostrar sección correcta
-  document.getElementById("re-card-productos").style.display=esServ?"none":"block";
+  // Siempre mostrar tabla de productos
+  document.getElementById("re-card-productos").style.display="block";
+  // Mostrar datos de ejecución solo si es servicio
   document.getElementById("re-card-servicio").style.display=esServ?"block":"none";
   if(esServ){
     var ds=r.datosServicio||{};
@@ -2708,7 +2710,6 @@ function rqEditarReq(id){
     document.getElementById("re-fecha-ini-serv").value=ds.fechaInicio||"";
     document.getElementById("re-fecha-fin-serv").value=ds.fechaFin||"";
     document.getElementById("re-duracion-serv").value=ds.duracion||"";
-    // Poblar áreas
     var selArea=document.getElementById("re-area-sup");
     if(selArea.options.length<=1){
       var areas=USUARIOS.map(function(u){return u.area;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
@@ -2716,14 +2717,12 @@ function rqEditarReq(id){
     }
     selArea.value=ds.areaSupervisora||"";
   }
-  {
-    // Cargar productos
-    document.getElementById("req-edit-body").innerHTML="";
-    (r.productos||[]).forEach(function(p){
-      rqAddProdEdit(p.descripcion, p.cantidad, p.um, p.precio, p.iva!==false, (p.iepsPct||0)/100);
-    });
-    rqCalcTotalesEdit();
-  }
+  // Cargar productos
+  document.getElementById("req-edit-body").innerHTML="";
+  (r.productos||[]).forEach(function(p){
+    rqAddProdEdit(p.descripcion, p.cantidad, p.um, p.precio, p.iva!==false, (p.iepsPct||0)/100);
+  });
+  rqCalcTotalesEdit();
   om("m-req-edit");
   setTimeout(function(){var md=document.querySelector("#m-req-edit .md");if(md)md.scrollTop=0;},50);
 }
