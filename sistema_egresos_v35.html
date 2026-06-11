@@ -2647,7 +2647,7 @@ function rqEditarReq(id){
   if(!r){toast("Requisición no encontrada","err");return;}
   rqEditId=id;
   rqEditCtr=0;
-  var esServ=r.esServicio||false;
+  var esServ=r.esServicio||(r.tipoBien||"").toUpperCase()==="SERVICIO";
   // Info encabezado
   document.getElementById("req-edit-info").innerHTML=
     "<div style='background:var(--vino-bg);border:1px solid #e8cfd3;border-left:3px solid var(--vino);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;'>"
@@ -2779,7 +2779,7 @@ function rqGuardarEdit(){
   var reqs=getReqs(),r=null;
   for(var i=0;i<reqs.length;i++){if(reqs[i].id===rqEditId){r=reqs[i];break;}}
   if(!r){toast("Requisición no encontrada","err");return;}
-  var esServ=r.esServicio||false;
+  var esServ=r.esServicio||(r.tipoBien||"").toUpperCase()==="SERVICIO";
   if(esServ){
     var montoS=parseFloat(document.getElementById("re-monto-serv").value)||0;
     if(!montoS){toast("Ingresa el monto estimado","err");return;}
