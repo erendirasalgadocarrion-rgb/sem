@@ -2148,16 +2148,7 @@ function rqBuildPrint(data){
   var meses=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   var hoy=new Date(),fechaGen=hoy.getDate()+" de "+meses[hoy.getMonth()]+" de "+hoy.getFullYear();
   var logo=getLogo();
-  
-  var rqSub=0,rqIeps=0,rqIva=0;
-  data.productos.forEach(function(p){
-    var imp=parseFloat(p.cantidad||1)*parseFloat(p.precio||0);
-    var ia=imp*(parseFloat(p.iepsPct||0)/100);
-    rqSub+=imp;rqIeps+=ia;
-    if(p.iva!==false&&p.iva) rqIva+=(imp+ia)*0.16;
-  });
-  var rqTot=rqSub+rqIeps+rqIva;
-var ph=data.productos.map(function(p){
+  var ph=data.productos.map(function(p){
     return"<tr><td style='text-align:center;'>"+p.cantidad+"</td><td style='text-align:center;'>"+p.um+"</td><td>"+p.descripcion+"</td><td>"+p.uso+"</td><td style='text-align:right;'>"+f(parseFloat(p.precio||0))+"</td><td style='text-align:right;font-weight:700;'>"+f(parseFloat(p.importe||0))+"</td></tr>";
   }).join("");
   var extras=".datos{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:12px;margin-bottom:16px;}"
@@ -2190,10 +2181,20 @@ var ph=data.productos.map(function(p){
     +"<table><thead><tr><th style='width:55px;text-align:center;'>Cant.</th><th style='width:60px;text-align:center;'>U.M.</th><th>Descripcion</th><th>Uso / Aplicacion</th><th style='text-align:right;width:90px;'>Precio Unit.</th><th style='text-align:right;width:95px;'>Importe</th></tr></thead>"
     +"<tbody>"+ph+"</tbody></table>"
     +"<div class='tots'>"
-    +"<div class='trow'><span class='tlbl'>Subtotal:</span><span class='tval'>"+f(rqSub)+"</span></div>"
-    +(rqIeps>0?"<div class='trow'><span class='tlbl'>IEPS:</span><span class='tval'>"+f(rqIeps)+"</span></div>":"")
-    +"<div class='trow'><span class='tlbl'>IVA (16%):</span><span class='tval'>"+f(rqIva)+"</span></div>"
-    +"<div class='trow fin'><span class='tlbl' style='color:#6B0F1A;font-weight:700;'>TOTAL:</span><span class='tval'>"+f(rqTot)+"</span></div>"
+  // Recalcular totales con IEPS
+  var rqSub=0,rqIeps=0,rqIva=0;
+  data.productos.forEach(function(p){
+    var imp=parseFloat(p.cantidad||1)*parseFloat(p.precio||0);
+    var ia=imp*(parseFloat(p.iepsPct||0)/100);
+    rqSub+=imp;rqIeps+=ia;
+    if(p.iva!==false&&p.iva) rqIva+=(imp+ia)*0.16;
+  });
+  var rqTot=rqSub+rqIeps+rqIva;
+    +"<div class=\'tots\'>"
+    +"<div class=\'trow\'><span class=\'tlbl\'>Subtotal:</span><span class=\'tval\'>"+f(rqSub)+"</span></div>"
+    +(rqIeps>0?"<div class=\'trow\'><span class=\'tlbl\'>IEPS:</span><span class=\'tval\'>"+f(rqIeps)+"</span></div>":"")
+    +"<div class=\'trow\'><span class=\'tlbl\'>IVA (16%):</span><span class=\'tval\'>"+f(rqIva)+"</span></div>"
+    +"<div class=\'trow fin\'><span class=\'tlbl\' style=\'color:#6B0F1A;font-weight:700;\'>TOTAL:</span><span class=\'tval\'>"+f(rqTot)+"</span></div>"
     +"</div>"
     +"<div class='firmas-pie'>"
     +"<div class='firmas-grid col4'>"
@@ -2569,16 +2570,16 @@ function rqAddProdEdit(desc,cant,um,precio,aplicaIVA,tasaIEPS){
   var chk=(aplicaIVA===false)?"":"checked";
   var iepsVal=(parseFloat(tasaIEPS||0)*100).toFixed(0);
   var tr=document.createElement("tr");tr.id=rid;
-  tr.innerHTML=
-    "<td class='w-cant'><input type='number' min='0' step='any' value='"+c+"' oninput=\"rqCalcFilaEdit('"+rid+"')\"></td>"
-   +"<td class='w-um'><select>"+umOpts+"</select></td>"
-   +"<td><input type='text' value=\""+d+"\" placeholder='Descripcion...'></td>"
-   +"<td><input type='text' placeholder='Uso...'></td>"
-   +"<td class='w-precio'><input type='number' min='0' step='0.01' value='"+p+"' oninput=\"rqCalcFilaEdit('"+rid+"')\"></td>"
-   +"<td style='text-align:center;'><input type='checkbox' "+chk+" onchange='rqCalcTotalesEdit()' style='width:16px;height:16px;accent-color:var(--vino);cursor:pointer;'></td>"
-   +"<td style='text-align:center;width:55px;'><input type='number' min='0' max='100' step='1' value='"+iepsVal+"' oninput='rqCalcTotalesEdit()' style='width:48px;text-align:center;padding:4px;'></td>"
-   +"<td class='w-imp'><input type='number' readonly value='0.00'></td>"
-   +"<td class='w-del'><button class='btn bd bsm' style='padding:3px 8px;' onclick=\"rqDelFilaEdit('"+rid+"')\">&#x2715;</button></td>";
+  var h1="<td class='w-cant'><input type='number' min='0' step='any' value='"+c+"' oninput=\"rqCalcFilaEdit('"+rid+"')\"></td>";
+  var h2="<td class='w-um'><select>"+umOpts+"</select></td>";
+  var h3="<td><input type='text' value=\""+d+"\" placeholder='Descripcion...'></td>";
+  var h4="<td><input type='text' placeholder='Uso...'></td>";
+  var h5="<td class='w-precio'><input type='number' min='0' step='0.01' value='"+p+"' oninput=\"rqCalcFilaEdit('"+rid+"')\"></td>";
+  var h6="<td style='text-align:center;'><input type='checkbox' "+chk+" onchange='rqCalcTotalesEdit()' style='width:16px;height:16px;accent-color:var(--vino);cursor:pointer;'></td>";
+  var h7="<td style='text-align:center;width:55px;'><input type='number' min='0' max='100' step='1' value='"+iepsVal+"' oninput='rqCalcTotalesEdit()' style='width:48px;text-align:center;padding:4px;'></td>";
+  var h8="<td class='w-imp'><input type='number' readonly value='0.00'></td>";
+  var h9="<td class='w-del'><button class='btn bd bsm' style='padding:3px 8px;' onclick=\"rqDelFilaEdit('"+rid+"')\">&#x2715;</button></td>";
+  tr.innerHTML=h1+h2+h3+h4+h5+h6+h7+h8+h9;
   document.getElementById("req-edit-body").appendChild(tr);
   rqCalcFilaEdit(rid);
 }
@@ -2756,16 +2757,19 @@ function rqAddProd(desc,cant,um,precio,aplicaIVA,tasaIEPS){
   var chk=(aplicaIVA===false)?"":"checked";
   var iepsVal=(parseFloat(tasaIEPS||0)*100).toFixed(0);
   var tr=document.createElement("tr");tr.id=rid;
-  tr.innerHTML=
-    "<td class='w-cant'><input type='number' min='0' step='any' value='"+c+"' oninput=\"rqCalcFila('"+rid+"')\"></td>"
-   +"<td class='w-um'><select>"+umOpts+"</select></td>"
-   +"<td><input type='text' value=\""+d+"\" placeholder='Descripcion...'></td>"
-   +"<td><input type='text' placeholder='Uso...'></td>"
-   +"<td class='w-precio'><input type='number' min='0' step='0.01' value='"+p+"' oninput=\"rqCalcFila('"+rid+"')\"></td>"
-   +"<td style='text-align:center;'><input type='checkbox' "+chk+" onchange='rqCalcTotales()' style='width:16px;height:16px;accent-color:var(--vino);cursor:pointer;'></td>"
-   +"<td style='text-align:center;width:55px;'><input type='number' min='0' max='100' step='1' value='"+iepsVal+"' oninput='rqCalcTotales()' style='width:48px;text-align:center;padding:4px;'></td>"
-   +"<td class='w-imp'><input type='number' readonly value='0.00'></td>"
-   +"<td class='w-del'><button class='btn bd bsm' style='padding:3px 8px;' onclick=\"rqDelFila('"+rid+"')\">&#x2715;</button></td>";
+  var h1="<td class='w-cant'><input type='number' min='0' step='any' value='"+c+"' oninput=\"rqCalcFila('"+rid+"')\"></td>";
+  var h2="<td class='w-um'><select>"+umOpts+"</select></td>";
+  var h3="<td><input type='text' value=\""+d+"\" placeholder='Descripcion...'></td>";
+  var h4="<td><input type='text' placeholder='Uso...'></td>";
+  var h5="<td class='w-precio'><input type='number' min='0' step='0.01' value='"+p+"' oninput=\"rqCalcFila('"+rid+"')\"></td>";
+  var h6="<td style='text-align:center;'><input type='checkbox' "+chk+" onchange='rqCalcTotales()' style='width:16px;height:16px;accent-color:var(--vino);cursor:pointer;'></td>";
+  var h7="<td style='text-align:center;width:55px;'><input type='number' min='0' max='100' step='1' value='"+iepsVal+"' oninput='rqCalcTotales()' style='width:48px;text-align:center;padding:4px;'></td>";
+  var h8="<td class='w-imp'><input type='number' readonly value='0.00'></td>";
+  var h9="<td class='w-del'><button class='btn bd bsm' style='padding:3px 8px;' onclick=\"rqDelFila('"+rid+"')\">&#x2715;</button></td>";
+  tr.innerHTML=h1+h2+h3+h4+h5+h6+h7+h8+h9;
   document.getElementById("rq-prod-body").appendChild(tr);
   rqCalcFila(rid);
-}>
+}
+</script>
+</body>
+</html>
