@@ -1585,11 +1585,12 @@ function buildSolicitudOficio(s){
   var benef=s.beneficiario?"<br>En beneficio de: <strong>"+s.beneficiario+"</strong>":"";
   var css="*{box-sizing:border-box;margin:0;padding:0;}"
     +"body{font-family:Arial,sans-serif;font-size:12px;color:#1f2937;padding:40px 60px;max-width:800px;margin:0 auto;line-height:1.8;}"
-    +".hdr{display:flex;align-items:center;gap:16px;border-bottom:3px solid #6B0F1A;padding-bottom:14px;margin-bottom:24px;}"
-    +".hdr-logo{width:100px;flex-shrink:0;}"
-    +".hdr-logo img{width:100%;}"
-    +".hdr-mid h1{font-size:13px;font-weight:700;color:#6B0F1A;text-transform:uppercase;}"
-    +".hdr-mid p{font-size:10px;color:#6b7280;margin-top:2px;}"
+    +".hdr{display:flex;align-items:center;gap:20px;border-bottom:3px solid #6B0F1A;padding-bottom:14px;margin-bottom:24px;}"
+    +".hdr-logo{width:80px;min-width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}"
+    +".hdr-logo img{width:100%;height:auto;object-fit:contain;}"
+    +".hdr-mid{flex:1;min-width:0;}"
+    +".hdr-mid h1{font-size:13px;font-weight:700;color:#6B0F1A;text-transform:uppercase;line-height:1.4;}"
+    +".hdr-mid p{font-size:10px;color:#6b7280;margin-top:3px;}"
     +".folio{text-align:right;font-size:11px;color:#6b7280;margin-bottom:20px;}"
     +".folio strong{color:#6B0F1A;font-size:14px;}"
     +".lugar-fecha{margin-bottom:20px;}"
@@ -2548,19 +2549,20 @@ function rqImprimirDet(){
   }
 }
 function rqAbrirVentana(html){
-  // Crear iframe oculto para descargar como archivo
-  var blob=new Blob([html],{type:"text/html;charset=utf-8"});
-  var url=URL.createObjectURL(blob);
-  var win=window.open(url,"_blank");
-  if(!win){
-    // Fallback: enlace de descarga
-    var a=document.createElement("a");
-    a.href=url;
-    a.download="requisicion.html";
-    a.click();
-    toast("El entregable se descargó como archivo","info");
-  }
-  setTimeout(function(){URL.revokeObjectURL(url);},120000);
+  // Usar srcdoc en iframe dentro de nueva ventana para evitar cortes de document.write
+  var encoded=encodeURIComponent(html);
+  var win=window.open("","_blank","width=960,height=900");
+  if(!win){toast("Permite ventanas emergentes","err");return;}
+  win.document.open();
+  win.document.write(
+    "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body style='margin:0;padding:0;'>"
+    +"<iframe id='fr' style='width:100%;height:100vh;border:none;' srcdoc=''></iframe>"
+    +"<script>"
+    +"document.getElementById('fr').srcdoc=decodeURIComponent('"+encoded.replace(/'/g,"\'")+"');"
+    +"<\/script>"
+    +"</body></html>"
+  );
+  win.document.close();
 }
 function rqBuildPrint(data){
   var f=function(n){return"$"+(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});};
