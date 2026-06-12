@@ -1657,6 +1657,7 @@ function rHist(){
     var puedeComp=esAuxAdmin&&(s.estado==="APROBADO"||s.estado==="COMPLEMENTADO");
     var btnComp=puedeComp?"<button class='btn bs bsm' onclick=\"abrirComp('"+s.id+"')\">📋 Revisar</button> ":"";
     var btnAdj="<button class='btn bo bsm' onclick=\"abrirAdj('"+s.id+"')\">📎 Adjuntar</button> ";
+    var btnReq=(esAuxAdmin&&s.estado==="COMPLEMENTADO")?"<button class='btn bgold bsm' onclick=\"irAReqDesdeSol('"+s.id+"')\">📄 Ir a Requisición</button> ":"";
     var btnVer="<button class='btn bo bsm' onclick=\"verDet('"+s.id+"')\">🔍</button>";
     return "<tr>"
       +"<td><b style='color:var(--vino);cursor:pointer;text-decoration:underline;' onclick=\"verDet('"+s.id+"')\">"+s.folio+"</b></td>"
@@ -1667,7 +1668,7 @@ function rHist(){
       +"<td style='max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;' title='"+s.descripcion+"'>"+s.descripcion+"</td>"
       +"<td style='text-align:right;font-weight:700;'>"+fmt(s.importeEstimado)+"</td>"
       +"<td style='text-align:center;'><span class='sb "+sCls(s.estado)+"'>"+s.estado+"</span></td>"
-      +"<td style='text-align:center;display:flex;gap:4px;justify-content:center;'>"+btnComp+btnAdj+btnVer+"</td>"
+      +"<td style='text-align:center;display:flex;gap:4px;justify-content:center;'>"+btnComp+btnReq+btnAdj+btnVer+"</td>"
       +"</tr>";
   }).join("")||"<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:24px;'>No hay solicitudes registradas</td></tr>";
 }
@@ -2007,10 +2008,26 @@ function guardarComp(){
     toast("✔ "+s.folio+" complementada"+msg,"ok");
     cm("m-comp");rMis();
     if(SE.p.hist) rHist();
-  if(SE.p.adq)  rAdq();
+    if(SE.p.adq)  rAdq();
   } else {
     toast("Error al guardar","err");
   }
+}
+
+function irARequisicion(){
+  cm("m-comp");
+  showSec("sec-requisiciones",null);
+}
+
+function irAReqDesdeSol(solId){
+  showSec("sec-requisiciones",null);
+  // Preseleccionar la solicitud
+  setTimeout(function(){
+    var sols=getSols();
+    var sol=null;
+    for(var i=0;i<sols.length;i++){if(sols[i].id===solId){sol=sols[i];break;}}
+    if(sol) rqSelSol(sol.id);
+  },200);
 }
 
 function marcarCerrado(){
