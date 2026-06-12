@@ -2549,14 +2549,10 @@ function rqImprimirDet(){
   }
 }
 function rqAbrirVentana(html){
-  // Descargar como archivo HTML y abrir en nueva pestaña
-  var blob=new Blob([html],{type:"text/html;charset=utf-8"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");
-  a.href=url;
-  a.target="_blank";
-  a.click();
-  setTimeout(function(){URL.revokeObjectURL(url);},10000);
+  var win=window.open("","_blank","width=960,height=900");
+  if(!win){toast("Permite ventanas emergentes","err");return;}
+  win.document.write(html);
+  win.document.close();
 }
 function rqBuildPrint(data){
   var f=function(n){return"$"+(n||0).toLocaleString("es-MX",{minimumFractionDigits:2});};
