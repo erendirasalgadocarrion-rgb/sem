@@ -664,7 +664,7 @@ tr:last-child td{border-bottom:none;}
 
 <!-- ADQUISICIONES -->
 <div class="sec" id="sec-adquisiciones">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Adquisiciones</h3><p>Órdenes de Compra y Pago</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Adquisiciones</h3><p>Órdenes de Compra (contado y crédito)</p></div></div>
   <div class="card">
     <div class="fb">
       <input type="text" id="adq-q" placeholder="Buscar folio, área, proveedor..." oninput="rAdq()">
@@ -723,7 +723,7 @@ tr:last-child td{border-bottom:none;}
 </div></div>
 <!-- HISTORIAL ÓRDENES -->
 <div class="sec" id="sec-adquisiciones-hist">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Historial de Órdenes</h3><p>Órdenes de Compra y Pago generadas</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Historial de Órdenes de Compra</h3><p>Todas las órdenes de compra generadas</p></div></div>
   <div class="card">
     <div class="fb">
       <input type="text" id="hist-ord-q" placeholder="Buscar folio, proveedor, área..." oninput="rHistOrd()">
@@ -1089,17 +1089,18 @@ var NAV = [
     ]
   },
   {
-    id:"adquisiciones", icon:"🛒", label:"Adquisiciones",
-    items:[
-      {id:"sec-adquisiciones", icon:"📋", label:"Órdenes de Compra/Pago", perm:"adq", bdg:""},
-    ]
-  },
-  {
     id:"requisiciones", icon:"📄", label:"Requisiciones",
     items:[
       {id:"sec-requisiciones",icon:"➕", label:"Nueva Requisición",         perm:"req",  bdg:""},
       {id:"sec-lista-req",    icon:"📂", label:"Modificar Requisición",     perm:"lreq", bdg:""},
       {id:"sec-catalogos",    icon:"⚙️", label:"Catálogos",                perm:"cfg",  bdg:""},
+    ]
+  },
+  {
+    id:"adquisiciones", icon:"🛒", label:"Adquisiciones",
+    items:[
+      {id:"sec-adquisiciones",     icon:"📋", label:"Órdenes de Compra",       perm:"adq", bdg:""},
+      {id:"sec-adquisiciones-hist",icon:"📂", label:"Historial de Órdenes",   perm:"adq", bdg:""},
     ]
   }
 ];
@@ -1284,8 +1285,8 @@ var BREADCRUMBS={
   "sec-solicitud":    {parent:"Solicitudes",   child:"Mis Solicitudes"},
   "sec-aprobaciones": {parent:"Solicitudes",   child:"Autorizaciones Pendientes"},
   "sec-historial":    {parent:"Solicitudes",   child:"Revisión de Solicitudes"},
-  "sec-adquisiciones":     {parent:"Adquisiciones", child:"Órdenes de Compra/Pago"},
-  "sec-adquisiciones-hist":{parent:"Adquisiciones", child:"Historial de Órdenes"},
+  "sec-adquisiciones":     {parent:"Adquisiciones", child:"Órdenes de Compra"},
+  "sec-adquisiciones-hist":{parent:"Adquisiciones", child:"Historial de Órdenes de Compra"},
   "sec-requisiciones":{parent:"Requisiciones", child:"Nueva Requisición"},
   "sec-lista-req":    {parent:"Requisiciones", child:"Modificar Requisición"},
   "sec-catalogos":    {parent:"Requisiciones", child:"Catálogos"}
@@ -3225,7 +3226,7 @@ function adqNuevaOrden(reqId){
   document.getElementById("adq-proveedor").value=r.proveedor||"";
   // Condiciones y tipo
   document.getElementById("adq-condiciones").value=r.tipoPago||"CONTADO";
-  document.getElementById("adq-tipo-orden").value=r.tipoPago==="CREDITO"?"Orden de Compra":"Orden de Pago";
+  document.getElementById("adq-tipo-orden").value="Orden de Compra "+(r.tipoPago==="CREDITO"?"(Crédito)":"(Contado)");
   // Cargar productos pendientes (no incluidos en órdenes anteriores)
   var ords=getOrds().filter(function(o){return o.reqId===r.id;});
   var prodsCubiertos={};
