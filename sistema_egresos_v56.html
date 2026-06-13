@@ -1175,6 +1175,7 @@ tr:last-child td{border-bottom:none;}
   </div></div>
   <div class="mf">
     <button class="btn bo" onclick="cm('m-adq-mod')">Cancelar</button>
+    <button class="btn bgold" onclick="adqImprimirDesdemod()">🖨 Imprimir</button>
     <button class="btn bp" onclick="adqGuardarMod()">✔ Guardar cambios</button>
   </div>
 </div></div>
@@ -3328,6 +3329,7 @@ function printCSS(extras){
     +".firmas-grid{display:grid;gap:16px;}"
     +".firmas-grid.col4{grid-template-columns:1fr 1fr 1fr 1fr;}"
     +".firmas-grid.col3{grid-template-columns:1fr 1fr 1fr;}"
+    +".firmas-grid.col2{grid-template-columns:1fr 1fr;}"
     +".firmas-grid.col1{grid-template-columns:1fr;max-width:280px;margin:0 auto;}"
     +".firma{text-align:center;}"
     +".firma .linea{border-top:1.5px solid #374151;margin-bottom:6px;}"
@@ -5119,6 +5121,11 @@ function adqModCalc(){
   document.getElementById("adqmod-t-tot").textContent=f(tot);
 }
 
+function adqImprimirDesdemod(){
+  if(!adqModOrdId){toast("No hay orden seleccionada","err");return;}
+  adqImprimir(adqModOrdId);
+}
+
 function adqGuardarMod(){
   if(!adqModOrdId){toast("Error: no hay orden seleccionada","err");return;}
   var fecha=document.getElementById("adqmod-fecha").value;
@@ -5359,8 +5366,7 @@ function adqBuildPrint(ord){
   var fechaOrd=new Date(ord.fecha+"T12:00:00");
   var fechaDoc=fechaOrd.getDate()+" de "+meses[fechaOrd.getMonth()]+" de "+fechaOrd.getFullYear();
   var logo=getLogo();
-  var esCredito=ord.tipoPago==="CREDITO";
-  var titulo=esCredito?"Orden de Compra":"Orden de Pago";
+  var condPago=ord.tipoPago==="CREDITO"?"CRÉDITO":"CONTADO";
   var ph=(ord.productos||[]).map(function(p){
     var imp=parseFloat(p.cantidad||1)*parseFloat(p.precio||0);
     return"<tr>"
@@ -5373,38 +5379,67 @@ function adqBuildPrint(ord){
       +"</tr>";
   }).join("");
   var extras=""
-    +".datos{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:12px;margin-bottom:16px;}"
-    +".dato label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;display:block;margin-bottom:2px;}"
-    +".dato span{font-size:11px;font-weight:600;}"
+    // Bloque proveedor destacado
+    +".prov-blk{border:2px solid #6B0F1A;border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;}"
+    +".prov-blk .prov-label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}"
+    +".prov-blk .prov-nombre{font-size:17px;font-weight:800;color:#3D0710;letter-spacing:.3px;}"
+    +".prov-blk .cond-box{background:#6B0F1A;color:#fff;border-radius:7px;padding:8px 16px;text-align:center;min-width:110px;flex-shrink:0;}"
+    +".prov-blk .cond-box .cond-lbl{font-size:8px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;opacity:.85;}"
+    +".prov-blk .cond-box .cond-val{font-size:14px;font-weight:800;margin-top:2px;}"
+    // Datos informativos (grilla secundaria)
+    +".datos-ref{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:#fdf5f6;border:1px solid #e8cfd3;border-radius:7px;padding:10px 12px;margin-bottom:16px;}"
+    +".dato-ref label{font-size:8.5px;font-weight:700;color:#9B4A55;text-transform:uppercase;display:block;margin-bottom:1px;}"
+    +".dato-ref span{font-size:10.5px;font-weight:600;color:#3D0710;}"
     +"table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;}"
     +"thead th{background:#6B0F1A;color:white;padding:7px 9px;text-align:left;font-size:10px;}"
     +"td{padding:6px 9px;border-bottom:1px solid #e5e7eb;word-break:break-word;}"
-    +".tots{display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-bottom:40px;}"
+    +".tots{display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-bottom:32px;}"
     +".trow{display:flex;gap:20px;font-size:12px;}"
     +".trow.fin{border-top:2px solid #6B0F1A;padding-top:6px;margin-top:2px;}"
     +".tlbl{color:#6b7280;min-width:130px;text-align:right;}"
     +".tval{font-weight:700;min-width:90px;text-align:right;}"
     +".trow.fin .tval{color:#6B0F1A;font-size:14px;}"
-    +".sec-title{font-size:11px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-bottom:6px;border-bottom:1.5px solid #e8cfd3;text-align:left;}";
-  return"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>"+titulo+" "+ord.folio+"</title>"
+    +".sec-title{font-size:10px;font-weight:700;color:#6B0F1A;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-bottom:5px;border-bottom:1.5px solid #e8cfd3;}";
+
+  return"<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Orden de Compra "+ord.folio+"</title>"
     +"<style>"+printCSS(extras)+"</style></head><body>"
+
+    // ── ENCABEZADO ──
     +"<div class='hdr'>"
     +"<div class='hdr-logo'>"+logo+"</div>"
-    +"<div class='hdr-mid'><h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"
-    +"<p>Tesorería Municipal — "+titulo+" — Ejercicio Fiscal 2026</p></div>"
-    +"<div class='hdr-folio'><div class='lbl'>Folio</div><div class='num'>"+ord.folio+"</div></div>"
+    +"<div class='hdr-mid'>"
+    +"<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"
+    +"<p style='font-size:18px;font-weight:800;color:#6B0F1A;margin-top:4px;letter-spacing:.5px;'>ORDEN DE COMPRA</p>"
+    +"<p style='font-size:10px;color:#6b7280;margin-top:2px;'>Tesorería Municipal — Ejercicio Fiscal 2026</p>"
     +"</div>"
-    +"<div class='sec-title'>Datos de la Orden</div>"
-    +"<div class='datos'>"
-    +"<div class='dato'><label>Fecha</label><span>"+fechaDoc+"</span></div>"
-    +"<div class='dato'><label>Requisición origen</label><span>"+ord.reqFolio+"</span></div>"
-    +"<div class='dato'><label>Área</label><span>"+ord.area+"</span></div>"
-    +"<div class='dato'><label>Solicitante</label><span style='font-size:10px;'>"+ord.solicitante+"</span></div>"
-    +"<div class='dato' style='grid-column:span 2;'><label>Proveedor</label><span style='color:#6B0F1A;font-weight:700;'>"+ord.proveedor.toUpperCase()+"</span></div>"
-    +"<div class='dato'><label>Condiciones de Pago</label><span>"+ord.tipoPago+"</span></div>"
-    +"<div class='dato'><label>Fondo</label><span>"+ord.fondo+"</span></div>"
-    +"<div class='dato' style='grid-column:1/-1;'><label>Programa</label><span style='font-size:10px;'>"+ord.programa+"</span></div>"
+    +"<div class='hdr-folio'><div class='lbl'>Folio</div><div class='num'>"+ord.folio+"</div>"
+    +"<div style='font-size:9px;color:#6b7280;margin-top:4px;'>"+fechaDoc+"</div>"
     +"</div>"
+    +"</div>"
+
+    // ── PROVEEDOR DESTACADO + CONDICIONES ──
+    +"<div class='prov-blk'>"
+    +"<div style='flex:1;'>"
+    +"<div class='prov-label'>Proveedor</div>"
+    +"<div class='prov-nombre'>"+ord.proveedor.toUpperCase()+"</div>"
+    +"</div>"
+    +"<div class='cond-box'>"
+    +"<div class='cond-lbl'>Condiciones</div>"
+    +"<div class='cond-val'>"+condPago+"</div>"
+    +"</div>"
+    +"</div>"
+
+    // ── DATOS DE REFERENCIA (informativos) ──
+    +"<div class='sec-title'>Datos de referencia</div>"
+    +"<div class='datos-ref'>"
+    +"<div><label>Requisición</label><span>"+ord.reqFolio+"</span></div>"
+    +"<div><label>Área solicitante</label><span>"+ord.area+"</span></div>"
+    +"<div><label>Solicitante</label><span style='font-size:10px;'>"+ord.solicitante+"</span></div>"
+    +"<div><label>Fondo</label><span>"+ord.fondo+"</span></div>"
+    +"<div style='grid-column:span 4;'><label>Programa presupuestal</label><span>"+ord.programa+"</span></div>"
+    +"</div>"
+
+    // ── TABLA DE PRODUCTOS ──
     +"<div class='sec-title'>Detalle de Productos / Servicios</div>"
     +"<table><thead><tr>"
     +"<th style='width:55px;text-align:center;'>Cant.</th>"
@@ -5414,17 +5449,26 @@ function adqBuildPrint(ord){
     +"<th style='text-align:right;width:90px;'>Precio Unit.</th>"
     +"<th style='text-align:right;width:95px;'>Importe</th>"
     +"</tr></thead><tbody>"+ph+"</tbody></table>"
+
+    // ── TOTALES ──
     +"<div class='tots'>"
     +"<div class='trow'><span class='tlbl'>Subtotal:</span><span class='tval'>"+f(ord.subtotal)+"</span></div>"
     +(ord.ieps>0?"<div class='trow'><span class='tlbl'>IEPS:</span><span class='tval'>"+f(ord.ieps)+"</span></div>":"")
     +"<div class='trow'><span class='tlbl'>IVA (16%):</span><span class='tval'>"+f(ord.iva)+"</span></div>"
     +"<div class='trow fin'><span class='tlbl' style='color:#6B0F1A;font-weight:700;'>TOTAL:</span><span class='tval'>"+f(ord.total)+"</span></div>"
     +"</div>"
+
+    // ── FIRMA TESORERA ──
     +"<div class='firmas-pie'>"
-    +"<div class='firmas-grid col3'>"
-    +"<div class='firma'><div class='linea'></div><div class='nombre'>ING. CHRISTIAN ROMERO PEREZ</div><div class='cargo'>Presidente Municipal — Autoriza</div></div>"
-    +"<div class='firma'><div class='linea'></div><div class='nombre'>MTRA. LOURDES MEDINA GAMBOA</div><div class='cargo'>Síndica Única — Visto Bueno</div></div>"
-    +"<div class='firma'><div class='linea'></div><div class='nombre'>LIC. YAMILETH DEL CARMEN MARQUEZ VERGARA</div><div class='cargo'>Regidora I — Visto Bueno</div></div>"
+    +"<div class='firmas-grid col2' style='max-width:500px;margin:0 auto;'>"
+    +"<div class='firma'><div class='linea'></div>"
+    +"<div class='nombre'>CP. ALICIA HUERVO DIAZ</div>"
+    +"<div class='cargo'>Tesorera Municipal — Emite</div>"
+    +"</div>"
+    +"<div class='firma'><div class='linea'></div>"
+    +"<div class='nombre'>ING. CHRISTIAN ROMERO PEREZ</div>"
+    +"<div class='cargo'>Presidente Municipal — Autoriza</div>"
+    +"</div>"
     +"</div>"
     +"<div class='pie'>Generado el "+fechaGen+(ord.creadoPor?" por "+ord.creadoPor:"")+" — Sistema de Egresos H. Ayuntamiento de Tlacotalpan</div>"
     +"</div>"
