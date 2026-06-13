@@ -660,10 +660,17 @@ tr:last-child td{border-bottom:none;}
 
 <!-- LISTA REQUISICIONES -->
 <div class="sec" id="sec-lista-req">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Requisiciones</h3><p>Listado general</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Modificar Requisición</h3><p>Busca y edita una requisición existente</p></div></div>
   <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border-left:3px solid var(--vino);">
+      <span style="font-size:20px;">🔍</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text1);">Busca y edita una requisición existente</div>
+        <div style="font-size:11px;color:var(--text3);">Filtra por folio, fecha, área o solicitante. Haz clic en <b>✏️ Editar</b> para abrir el detalle.</div>
+      </div>
+    </div>
     <div class="fb">
-      <input type="text" id="rl-q" placeholder="Buscar folio, área..." oninput="rListaReq()">
+      <input type="text" id="rl-q" placeholder="🔍 Folio, área, solicitante..." oninput="rListaReq()" style="min-width:220px;">
       <select id="rl-es" onchange="rListaReq()"><option value="">Todos los estados</option><option>PENDIENTE</option><option>ORDEN DE PAGO</option></select>
       <input type="date" id="rl-de" onchange="rListaReq()">
       <input type="date" id="rl-ha" onchange="rListaReq()">
@@ -706,10 +713,17 @@ tr:last-child td{border-bottom:none;}
 <!-- ADQUISICIONES: MODIFICAR ORDEN -->
 <!-- ============================================================ -->
 <div class="sec" id="sec-adq-modificar">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Modificar Orden de Compra</h3><p>Busca la orden que deseas modificar</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Modificar Orden de Compra</h3><p>Busca y edita una orden de compra existente</p></div></div>
   <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border-left:3px solid var(--vino);">
+      <span style="font-size:20px;">🔍</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text1);">Busca y edita una orden de compra existente</div>
+        <div style="font-size:11px;color:var(--text3);">Filtra por folio, fecha o proveedor. Haz clic en <b>✏️ Modificar</b> para abrir el detalle.</div>
+      </div>
+    </div>
     <div class="fb">
-      <input type="text" id="adqm-q" placeholder="Buscar folio OC, requisición, proveedor, área..." oninput="rAdqModificar()">
+      <input type="text" id="adqm-q" placeholder="🔍 Folio OC, requisición, proveedor, área..." oninput="rAdqModificar()" style="min-width:220px;">
       <select id="adqm-es" onchange="rAdqModificar()">
         <option value="">Todos los estados</option>
         <option>GENERADA</option><option>SURTIDA</option><option>PAGADA</option>
@@ -966,14 +980,28 @@ tr:last-child td{border-bottom:none;}
 <div class="sec" id="sec-sol-modificar">
   <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Modificar Solicitud</h3><p>Busca y edita una solicitud existente</p></div></div>
   <div class="card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border-left:3px solid var(--vino);">
+      <span style="font-size:20px;">🔍</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text1);">Busca y edita una solicitud existente</div>
+        <div style="font-size:11px;color:var(--text3);">Filtra por folio, fecha, área o solicitante. Haz clic en <b>✏️ Modificar</b> para abrir el detalle.</div>
+      </div>
+    </div>
     <div class="fb">
-      <input type="text" id="solmod-q" placeholder="Buscar por folio, área, solicitante..." oninput="rSolModificar()">
-      <input type="date" id="solmod-de" onchange="rSolModificar()">
-      <input type="date" id="solmod-ha" onchange="rSolModificar()">
+      <input type="text" id="solmod-q" placeholder="🔍 Folio, área, solicitante..." oninput="rSolModificar()" style="min-width:220px;">
+      <input type="date" id="solmod-de" onchange="rSolModificar()" title="Desde">
+      <input type="date" id="solmod-ha" onchange="rSolModificar()" title="Hasta">
+      <select id="solmod-es" onchange="rSolModificar()">
+        <option value="">Todos los estados</option>
+        <option>PENDIENTE</option><option>APROBADO</option><option>COMPLEMENTADO</option><option>RECHAZADO</option>
+      </select>
+      <button class="btn bo bsm" onclick="solmodLimpiar()">✕ Limpiar</button>
     </div>
     <div class="tw"><table>
       <thead><tr>
-        <th>Folio</th><th>Fecha</th><th>Área</th><th>Solicitante</th><th>Tipo</th><th>Estado</th><th style="text-align:center;">Acción</th>
+        <th>Folio</th><th>Fecha</th><th>Área</th><th>Solicitante</th><th>Tipo</th>
+        <th style="text-align:right;">Monto</th><th style="text-align:center;">Estado</th>
+        <th style="text-align:center;">Acción</th>
       </tr></thead>
       <tbody id="solmod-tbody"></tbody>
     </table></div>
@@ -1004,13 +1032,28 @@ tr:last-child td{border-bottom:none;}
 
 <!-- ADQUISICIONES: RECEPCIÓN COMPLEMENTAR -->
 <div class="sec" id="sec-comp-rec-comp">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Complementar Recepción</h3><p>Completar información de mercancía recibida</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Complementar Recepción de Mercancía</h3><p>Busca y complementa una recepción existente</p></div></div>
   <div class="card">
-    <div style="padding:40px;text-align:center;color:var(--text3);">
-      <div style="font-size:40px;margin-bottom:12px;">✏️</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Módulo en desarrollo</div>
-      <div style="font-size:12px;">Próximamente podrás complementar recepciones parciales.</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border-left:3px solid var(--vino);">
+      <span style="font-size:20px;">🔍</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text1);">Busca y complementa una recepción existente</div>
+        <div style="font-size:11px;color:var(--text3);">Filtra por folio, fecha o área. Haz clic en <b>✏️ Complementar</b> para abrir el detalle.</div>
+      </div>
     </div>
+    <div class="fb">
+      <input type="text" id="reccomp-q" placeholder="🔍 Folio, área..." oninput="rRecComp()" style="min-width:220px;">
+      <input type="date" id="reccomp-de" onchange="rRecComp()" title="Desde">
+      <input type="date" id="reccomp-ha" onchange="rRecComp()" title="Hasta">
+      <button class="btn bo bsm" onclick="reccompLimpiar()">✕ Limpiar</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Folio OC</th><th>Fecha</th><th>Área</th><th>Proveedor</th>
+        <th style="text-align:center;">Estado</th><th style="text-align:center;">Acción</th>
+      </tr></thead>
+      <tbody id="reccomp-tbody"></tbody>
+    </table></div>
   </div>
 </div>
 
@@ -1958,6 +2001,7 @@ function showSec(id,el){
   if(id==="sec-requisiciones") rSolsReq();
   if(id==="sec-lista-req")     rListaReq();
   if(id==="sec-sol-modificar") rSolModificar();
+  if(id==="sec-comp-rec-comp")  rRecComp();
   if(id==="sec-req-visual")    rReqVisualizar();
   if(id==="sec-catalogos")     rCatalogos();
   if(id==="sec-comp-recepcion") rCompRecepcion();
@@ -2410,9 +2454,11 @@ function rSolModificar(){
   var q=(document.getElementById("solmod-q")||{value:""}).value.toUpperCase();
   var de=(document.getElementById("solmod-de")||{value:""}).value;
   var ha=(document.getElementById("solmod-ha")||{value:""}).value;
+  var es=(document.getElementById("solmod-es")||{value:""}).value;
   var esSol=SE.perfil==="SOLICITANTE";
   var sols=getSols().filter(function(s){
     if(esSol&&s.registrador!==SE.nombre) return false;
+    if(es&&s.estado!==es) return false;
     if(de&&s.fecha<de) return false;
     if(ha&&s.fecha>ha) return false;
     if(q&&s.folio.indexOf(q)<0&&(s.area||"").indexOf(q)<0&&(s.registrador||"").toUpperCase().indexOf(q)<0) return false;
@@ -2422,23 +2468,69 @@ function rSolModificar(){
   if(!tbody) return;
   tbody.innerHTML=sols.length?sols.map(function(s){
     var puedeModif=s.estado==="PENDIENTE"||(SE.perfil==="ADMINISTRADOR");
-    var btn=puedeModif?"<button class='btn bs bsm' onclick=\"abrirSolModal('"+s.id+"')\">✏️ Modificar</button>":
-                       "<span style='color:var(--text3);font-size:11px;'>No editable</span>";
+    var btn=puedeModif
+      ?"<button class='btn bs bsm' onclick=\"abrirSolModal('"+s.id+"')\">✏️ Modificar</button>"
+      :"<button class='btn bo bsm' onclick=\"verDet('"+s.id+"')\">🔍 Ver</button>";
     return "<tr>"
-      +"<td><b style='color:var(--vino);'>"+s.folio+"</b></td>"
+      +"<td><b style='color:var(--vino);cursor:pointer;text-decoration:underline;' onclick=\"verDet('"+s.id+"')\">"+s.folio+"</b></td>"
       +"<td>"+s.fecha+"</td>"
       +"<td style='font-size:11px;'>"+s.area+"</td>"
       +"<td style='font-size:11px;'>"+s.registrador+"</td>"
-      +"<td style='font-size:11px;'>"+s.tipo+"</td>"
-      +"<td><span class='sb "+sCls(s.estado)+"'>"+s.estado+"</span></td>"
+      +"<td style='font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>"+s.tipo+"</td>"
+      +"<td style='text-align:right;font-weight:700;'>"+fmt(s.importeEstimado)+"</td>"
+      +"<td style='text-align:center;'><span class='sb "+sCls(s.estado)+"'>"+s.estado+"</span></td>"
       +"<td style='text-align:center;'>"+btn+"</td>"
       +"</tr>";
-  }).join(""):"<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:24px;'>No hay solicitudes</td></tr>";
+  }).join(""):"<tr><td colspan='8' style='text-align:center;color:var(--text3);padding:40px;'>"
+    +"<div style='font-size:32px;margin-bottom:8px;'>📋</div>"
+    +"<div style='font-weight:600;margin-bottom:4px;'>Sin resultados</div>"
+    +"<div style='font-size:11px;'>Intenta con otros filtros de búsqueda</div>"
+    +"</td></tr>";
+}
+function solmodLimpiar(){
+  ["solmod-q","solmod-de","solmod-ha","solmod-es"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value="";
+  });
+  rSolModificar();
 }
 
-function abrirSolModal(id){
-  // Reutiliza el modal de complementar/ver detalle abriendo con datos precargados
-  verDet(id);
+function abrirSolModal(id){ verDet(id); }
+
+function rRecComp(){
+  if(!SE) return;
+  var q=(document.getElementById("reccomp-q")||{value:""}).value.toUpperCase();
+  var de=(document.getElementById("reccomp-de")||{value:""}).value;
+  var ha=(document.getElementById("reccomp-ha")||{value:""}).value;
+  // Buscar órdenes de compra con recepción parcial
+  var ords=getOrds().filter(function(o){
+    if(o.estado==="SURTIDA"||o.estado==="PAGADA") return false;
+    if(de&&o.fecha<de) return false;
+    if(ha&&o.fecha>ha) return false;
+    if(q&&(o.folio||"").indexOf(q)<0&&(o.area||"").indexOf(q)<0) return false;
+    return true;
+  });
+  var tbody=document.getElementById("reccomp-tbody");
+  if(!tbody) return;
+  tbody.innerHTML=ords.length?ords.map(function(o){
+    return "<tr>"
+      +"<td><b style='color:var(--vino);'>"+o.folio+"</b></td>"
+      +"<td>"+(o.fecha||"—")+"</td>"
+      +"<td style='font-size:11px;'>"+(o.area||"—")+"</td>"
+      +"<td style='font-size:11px;'>"+(o.proveedor||"—")+"</td>"
+      +"<td style='text-align:center;'><span class='sb "+(o.estado==="SURTIDA PARCIALMENTE"?"sp":"sz")+"'>"+(o.estado||"PENDIENTE")+"</span></td>"
+      +"<td style='text-align:center;'><button class='btn bs bsm' onclick=\"adqVerComp('"+o.id+"')\">✏️ Complementar</button></td>"
+      +"</tr>";
+  }).join(""):"<tr><td colspan='6' style='text-align:center;color:var(--text3);padding:40px;'>"
+    +"<div style='font-size:32px;margin-bottom:8px;'>📦</div>"
+    +"<div style='font-weight:600;margin-bottom:4px;'>Sin recepciones pendientes</div>"
+    +"<div style='font-size:11px;'>No hay órdenes con recepción pendiente de complementar</div>"
+    +"</td></tr>";
+}
+function reccompLimpiar(){
+  ["reccomp-q","reccomp-de","reccomp-ha"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value="";
+  });
+  rRecComp();
 }
 
 function rReqVisualizar(){
