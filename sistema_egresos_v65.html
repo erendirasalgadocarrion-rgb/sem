@@ -962,6 +962,46 @@ tr:last-child td{border-bottom:none;}
 
 
 
+<!-- SOLICITUDES: MODIFICAR -->
+<div class="sec" id="sec-sol-modificar">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Modificar Solicitud</h3><p>Busca y edita una solicitud existente</p></div></div>
+  <div class="card">
+    <div class="fb">
+      <input type="text" id="solmod-q" placeholder="Buscar por folio, área, solicitante..." oninput="rSolModificar()">
+      <input type="date" id="solmod-de" onchange="rSolModificar()">
+      <input type="date" id="solmod-ha" onchange="rSolModificar()">
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Folio</th><th>Fecha</th><th>Área</th><th>Solicitante</th><th>Tipo</th><th>Estado</th><th style="text-align:center;">Acción</th>
+      </tr></thead>
+      <tbody id="solmod-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- REQUISICIONES: VISUALIZAR -->
+<div class="sec" id="sec-req-visual">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Visualizar Requisiciones</h3><p>Consulta el historial de requisiciones generadas</p></div></div>
+  <div class="card">
+    <div class="fb">
+      <input type="text" id="reqvis-q" placeholder="Buscar por folio, área, proveedor..." oninput="rReqVisualizar()">
+      <select id="reqvis-es" onchange="rReqVisualizar()">
+        <option value="">Todos los estados</option>
+        <option>PENDIENTE</option>
+        <option>ORDEN DE PAGO</option>
+        <option>CERRADO</option>
+      </select>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Folio</th><th>Fecha</th><th>Área</th><th>Proveedor</th><th>Total</th><th>Estado</th><th style="text-align:center;">Acción</th>
+      </tr></thead>
+      <tbody id="reqvis-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
 <!-- ADQUISICIONES: RECEPCIÓN COMPLEMENTAR -->
 <div class="sec" id="sec-comp-rec-comp">
   <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Complementar Recepción</h3><p>Completar información de mercancía recibida</p></div></div>
@@ -1594,48 +1634,50 @@ var NAV = [
   {
     id:"solicitudes", icon:"📋", label:"Solicitudes",
     items:[
-      {id:"sec-solicitud",    icon:"📝", label:"Nueva",              perm:"sol",  bdg:""},
-      {id:"sec-aprobaciones", icon:"✅", label:"Autorizar",          perm:"apr",  bdg:"apr"},
-      {id:"sec-historial",    icon:"🔍", label:"Visualizar",         perm:"hist", bdg:""},
+      {id:"sec-solicitud",    icon:"📝", label:"Nueva",         perm:"sol",  bdg:""},
+      {id:"sec-historial",    icon:"📋", label:"Complementar",  perm:"comp", bdg:""},
+      {id:"sec-sol-modificar",icon:"✏️", label:"Modificar",     perm:"sol",  bdg:""},
+      {id:"sec-historial",    icon:"📂", label:"Visualizar",    perm:"hist", bdg:""},
+      {id:"sec-aprobaciones", icon:"✅", label:"Autorizar",     perm:"apr",  bdg:"apr"},
     ]
   },
   {
     id:"requisiciones", icon:"📄", label:"Requisiciones",
     items:[
-      {id:"sec-requisiciones", icon:"➕", label:"Nueva",             perm:"req",  bdg:""},
-      {id:"sec-lista-req",     icon:"✏️", label:"Modificar",         perm:"lreq", bdg:""},
-      {id:"sec-catalogos",     icon:"📂", label:"Visualizar",        perm:"cfg",  bdg:""},
+      {id:"sec-requisiciones", icon:"➕", label:"Nueva",      perm:"req",  bdg:""},
+      {id:"sec-lista-req",     icon:"✏️", label:"Modificar",  perm:"lreq", bdg:""},
+      {id:"sec-req-visual",    icon:"📂", label:"Visualizar", perm:"lreq", bdg:""},
     ]
   },
   {
     id:"adquisiciones", icon:"🛒", label:"Adquisiciones",
     items:[
       {id:"subgrp-oc",  icon:"🛒", label:"Orden de Compra", perm:"adq", subgroup:true, items:[
-        {id:"sec-adq-crear",      icon:"➕", label:"Nueva",      perm:"adq",  bdg:""},
-        {id:"sec-adq-modificar",  icon:"✏️", label:"Modificar",  perm:"adq",  bdg:""},
-        {id:"sec-adq-visualizar", icon:"📂", label:"Visualizar", perm:"adq",  bdg:""},
+        {id:"sec-adq-crear",      icon:"➕", label:"Nueva",      perm:"adq", bdg:""},
+        {id:"sec-adq-modificar",  icon:"✏️", label:"Modificar",  perm:"adq", bdg:""},
+        {id:"sec-adq-visualizar", icon:"📂", label:"Visualizar", perm:"adq", bdg:""},
       ]},
       {id:"subgrp-rec", icon:"📦", label:"Recepción de Mercancía", perm:"comp", subgroup:true, items:[
-        {id:"sec-comp-recepcion",    icon:"➕", label:"Nueva",        perm:"comp", bdg:""},
-        {id:"sec-comp-rec-comp",     icon:"✏️", label:"Complementar", perm:"comp", bdg:""},
-        {id:"sec-comp-rec-visual",   icon:"📂", label:"Visualizar",   perm:"comp", bdg:""},
+        {id:"sec-comp-recepcion",  icon:"➕", label:"Nueva",        perm:"comp", bdg:""},
+        {id:"sec-comp-rec-comp",   icon:"✏️", label:"Complementar", perm:"comp", bdg:""},
+        {id:"sec-comp-rec-visual", icon:"📂", label:"Visualizar",   perm:"comp", bdg:""},
       ]},
     ]
   },
   {
     id:"comprobaciones", icon:"📎", label:"Comprobaciones",
     items:[
-      {id:"sec-comp-facturas",  icon:"🧾", label:"Subir Factura",            perm:"comp", bdg:""},
-      {id:"sec-comp-fotos",     icon:"📷", label:"Reporte Fotográfico",      perm:"comp", bdg:""},
-      {id:"sec-comp-bitacora",  icon:"📋", label:"Bitácora de Aplicación",   perm:"comp", bdg:""},
-      {id:"sec-comp-otros",     icon:"📁", label:"Otros Documentos",         perm:"comp", bdg:""},
+      {id:"sec-comp-facturas",  icon:"🧾", label:"Subir Factura",          perm:"comp", bdg:""},
+      {id:"sec-comp-fotos",     icon:"📷", label:"Reporte Fotográfico",    perm:"comp", bdg:""},
+      {id:"sec-comp-bitacora",  icon:"📋", label:"Bitácora de Aplicación", perm:"comp", bdg:""},
+      {id:"sec-comp-otros",     icon:"📁", label:"Otros Documentos",       perm:"comp", bdg:""},
     ]
   },
   {
     id:"cajachica", icon:"💵", label:"Caja Chica",
     items:[
-      {id:"sec-cc-nuevo",   icon:"➕", label:"Nuevo Vale de Caja",  perm:"cc", bdg:""},
-      {id:"sec-cc-arqueo",  icon:"📊", label:"Arqueo",              perm:"cc", bdg:""},
+      {id:"sec-cc-nuevo",  icon:"➕", label:"Nuevo Vale de Caja", perm:"cc", bdg:""},
+      {id:"sec-cc-arqueo", icon:"📊", label:"Arqueo",             perm:"cc", bdg:""},
     ]
   },
   {
@@ -1648,7 +1690,7 @@ var NAV = [
   {
     id:"configuracion", icon:"⚙️", label:"Configuración",
     items:[
-      {id:"sec-catalogos",   icon:"📂", label:"Catálogos",  perm:"cfg", bdg:""},
+      {id:"sec-catalogos", icon:"📂", label:"Catálogos", perm:"cfg", bdg:""},
     ]
   }
 ];
@@ -1866,27 +1908,28 @@ function cerrarSesion(){
 }
 
 var BREADCRUMBS={
-  "sec-solicitud":    {parent:"Solicitudes",   child:"Nueva"},
-  "sec-aprobaciones": {parent:"Solicitudes",   child:"Autorizar"},
-  "sec-historial":    {parent:"Solicitudes",   child:"Visualizar"},
-  "sec-cc-nuevo":  {parent:"Caja Chica", child:"Nuevo Vale de Caja"},
-  "sec-cc-arqueo": {parent:"Caja Chica", child:"Arqueo"},
-  "sec-pag-ordenes": {parent:"Pagos", child:"Emitir Orden de Pago"},
-  "sec-pag-cxp":     {parent:"Pagos", child:"Cuentas por Pagar"},
-  "sec-pag-hist":    {parent:"Pagos", child:"Historial de Pagos"},
+  "sec-solicitud":       {parent:"Solicitudes",            child:"Nueva"},
+  "sec-sol-modificar":   {parent:"Solicitudes",            child:"Modificar"},
+  "sec-aprobaciones":    {parent:"Solicitudes",            child:"Autorizar"},
+  "sec-historial":       {parent:"Solicitudes",            child:"Visualizar"},
+  "sec-cc-nuevo":        {parent:"Caja Chica",             child:"Nuevo Vale de Caja"},
+  "sec-cc-arqueo":       {parent:"Caja Chica",             child:"Arqueo"},
+  "sec-pag-ordenes":     {parent:"Pagos",                  child:"Emitir Orden de Pago"},
+  "sec-pag-cxp":         {parent:"Pagos",                  child:"Cuentas por Pagar"},
   "sec-comp-recepcion":  {parent:"Recepción de Mercancía", child:"Nueva"},
   "sec-comp-rec-comp":   {parent:"Recepción de Mercancía", child:"Complementar"},
   "sec-comp-rec-visual": {parent:"Recepción de Mercancía", child:"Visualizar"},
-  "sec-comp-fotos":     {parent:"Comprobaciones", child:"Reporte Fotográfico"},
-  "sec-comp-facturas":  {parent:"Comprobaciones", child:"Subir Factura"},
-  "sec-comp-bitacora":  {parent:"Comprobaciones", child:"Bitácora de Aplicación"},
-  "sec-comp-otros":     {parent:"Comprobaciones", child:"Otros Documentos"},
-  "sec-adq-crear":      {parent:"Adquisiciones",  child:"Nueva Orden de Compra"},
-  "sec-adq-modificar":  {parent:"Adquisiciones",  child:"Modificar Orden de Compra"},
-  "sec-adq-visualizar": {parent:"Adquisiciones",  child:"Visualizar Órdenes"},
-  "sec-requisiciones":  {parent:"Requisiciones",  child:"Nueva"},
-  "sec-lista-req":      {parent:"Requisiciones",  child:"Modificar"},
-  "sec-catalogos":      {parent:"Configuración",  child:"Catálogos"}
+  "sec-comp-fotos":      {parent:"Comprobaciones",         child:"Reporte Fotográfico"},
+  "sec-comp-facturas":   {parent:"Comprobaciones",         child:"Subir Factura"},
+  "sec-comp-bitacora":   {parent:"Comprobaciones",         child:"Bitácora de Aplicación"},
+  "sec-comp-otros":      {parent:"Comprobaciones",         child:"Otros Documentos"},
+  "sec-adq-crear":       {parent:"Orden de Compra",        child:"Nueva"},
+  "sec-adq-modificar":   {parent:"Orden de Compra",        child:"Modificar"},
+  "sec-adq-visualizar":  {parent:"Orden de Compra",        child:"Visualizar"},
+  "sec-requisiciones":   {parent:"Requisiciones",          child:"Nueva"},
+  "sec-lista-req":       {parent:"Requisiciones",          child:"Modificar"},
+  "sec-req-visual":      {parent:"Requisiciones",          child:"Visualizar"},
+  "sec-catalogos":       {parent:"Configuración",          child:"Catálogos"}
 };
 function setTopTitle(id){
   var bc=BREADCRUMBS[id]||{parent:"Sistema de Egresos",child:""};
@@ -1914,6 +1957,8 @@ function showSec(id,el){
   if(id==="sec-historial")     rHist();
   if(id==="sec-requisiciones") rSolsReq();
   if(id==="sec-lista-req")     rListaReq();
+  if(id==="sec-sol-modificar") rSolModificar();
+  if(id==="sec-req-visual")    rReqVisualizar();
   if(id==="sec-catalogos")     rCatalogos();
   if(id==="sec-comp-recepcion") rCompRecepcion();
   if(id==="sec-adq-modificar") rAdqModificar();
@@ -2338,9 +2383,10 @@ function rHist(){
   var esAuxAdmin=SE.perfil==="AUXILIAR ADMINISTRATIVO"||SE.perfil==="AUXILIAR"||SE.perfil==="ADMINISTRADOR";
   document.getElementById("thist").innerHTML=sols.map(function(s){
     var puedeComp=esAuxAdmin&&(s.estado==="APROBADO"||s.estado==="COMPLEMENTADO");
-    var btnComp=puedeComp?"<button class='btn bs bsm' onclick=\"abrirComp('"+s.id+"')\">📋 Revisar</button> ":"";
+    var btnComp=puedeComp?"<button class='btn bs bsm' onclick=\"abrirComp('"+s.id+"')\">📋 Complementar</button> ":"";
     var btnAdj="<button class='btn bo bsm' onclick=\"abrirAdj('"+s.id+"')\">📎 Adjuntar</button> ";
     var btnReq=(esAuxAdmin&&s.estado==="COMPLEMENTADO")?"<button class='btn bgold bsm' onclick=\"irAReqDesdeSol('"+s.id+"')\">📄 Crear Requisición</button> ":"";
+    var btnCC="";
     var btnVer="<button class='btn bo bsm' onclick=\"verDet('"+s.id+"')\">🔍</button>";
     return "<tr>"
       +"<td><b style='color:var(--vino);cursor:pointer;text-decoration:underline;' onclick=\"verDet('"+s.id+"')\">"+s.folio+"</b></td>"
@@ -2359,6 +2405,66 @@ function rHist(){
 // ============================================================
 // DETALLE SOLICITUD
 // ============================================================
+function rSolModificar(){
+  if(!SE) return;
+  var q=(document.getElementById("solmod-q")||{value:""}).value.toUpperCase();
+  var de=(document.getElementById("solmod-de")||{value:""}).value;
+  var ha=(document.getElementById("solmod-ha")||{value:""}).value;
+  var esSol=SE.perfil==="SOLICITANTE";
+  var sols=getSols().filter(function(s){
+    if(esSol&&s.registrador!==SE.nombre) return false;
+    if(de&&s.fecha<de) return false;
+    if(ha&&s.fecha>ha) return false;
+    if(q&&s.folio.indexOf(q)<0&&(s.area||"").indexOf(q)<0&&(s.registrador||"").toUpperCase().indexOf(q)<0) return false;
+    return true;
+  });
+  var tbody=document.getElementById("solmod-tbody");
+  if(!tbody) return;
+  tbody.innerHTML=sols.length?sols.map(function(s){
+    var puedeModif=s.estado==="PENDIENTE"||(SE.perfil==="ADMINISTRADOR");
+    var btn=puedeModif?"<button class='btn bs bsm' onclick=\"abrirSolModal('"+s.id+"')\">✏️ Modificar</button>":
+                       "<span style='color:var(--text3);font-size:11px;'>No editable</span>";
+    return "<tr>"
+      +"<td><b style='color:var(--vino);'>"+s.folio+"</b></td>"
+      +"<td>"+s.fecha+"</td>"
+      +"<td style='font-size:11px;'>"+s.area+"</td>"
+      +"<td style='font-size:11px;'>"+s.registrador+"</td>"
+      +"<td style='font-size:11px;'>"+s.tipo+"</td>"
+      +"<td><span class='sb "+sCls(s.estado)+"'>"+s.estado+"</span></td>"
+      +"<td style='text-align:center;'>"+btn+"</td>"
+      +"</tr>";
+  }).join(""):"<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:24px;'>No hay solicitudes</td></tr>";
+}
+
+function abrirSolModal(id){
+  // Reutiliza el modal de complementar/ver detalle abriendo con datos precargados
+  verDet(id);
+}
+
+function rReqVisualizar(){
+  if(!SE) return;
+  var q=(document.getElementById("reqvis-q")||{value:""}).value.toUpperCase();
+  var es=(document.getElementById("reqvis-es")||{value:""}).value;
+  var reqs=getReqs().filter(function(r){
+    if(es&&r.estado!==es) return false;
+    if(q&&(r.folio||"").indexOf(q)<0&&(r.area||"").indexOf(q)<0&&(r.proveedor||"").toUpperCase().indexOf(q)<0) return false;
+    return true;
+  });
+  var tbody=document.getElementById("reqvis-tbody");
+  if(!tbody) return;
+  tbody.innerHTML=reqs.length?reqs.map(function(r){
+    return "<tr>"
+      +"<td><b style='color:var(--vino);'>"+r.folio+"</b></td>"
+      +"<td>"+(r.fecha||"—")+"</td>"
+      +"<td style='font-size:11px;'>"+(r.area||"—")+"</td>"
+      +"<td style='font-size:11px;'>"+(r.proveedor||"—")+"</td>"
+      +"<td style='text-align:right;font-weight:700;'>"+fmt(r.total||0)+"</td>"
+      +"<td><span class='sb "+sCls(r.estado)+"'>"+r.estado+"</span></td>"
+      +"<td style='text-align:center;'><button class='btn bo bsm' onclick=\"rqVerDet('"+r.id+"')\">🔍 Ver</button></td>"
+      +"</tr>";
+  }).join(""):"<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:24px;'>No hay requisiciones</td></tr>";
+}
+
 function verDet(id){
   var sols=getSols();
   var s=null;
