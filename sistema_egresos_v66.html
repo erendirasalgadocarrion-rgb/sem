@@ -1632,11 +1632,13 @@ var USUARIOS = [
 
 // Permisos: sol=solicitar, apr=aprobar, hist=ver historial, cfg=admin
 var PM = {
-  SOLICITANTE:               {sol:true,  apr:false, hist:false, req:false, lreq:false, adq:false, comp:true,  pag:false, cc:false,  cfg:false},
-  AUXILIAR:                  {sol:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  comp:true,  pag:true,  cc:true,   cfg:false},
-  "AUXILIAR ADMINISTRATIVO": {sol:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  comp:true,  pag:true,  cc:true,   cfg:false},
-  AUTORIZADOR:               {sol:true,  apr:true,  hist:true,  req:false, lreq:false, adq:false, comp:false, pag:false, cc:false,  cfg:false},
-  ADMINISTRADOR:             {sol:true,  apr:true,  hist:true,  req:true,  lreq:true,  adq:true,  comp:true,  pag:true,  cc:true,   cfg:true}
+  // sol=Nueva  vis=Visualizar propias  apr=Autorizar  hist=Ver todas  comp=Complementar/Comprobaciones
+  // req=Nueva Req  lreq=Modificar Req  adq=Adquisiciones  pag=Pagos  cc=Caja Chica  cfg=Config
+  SOLICITANTE:               {sol:true,  vis:true,  apr:false, hist:false, req:false, lreq:false, adq:false, comp:true,  pag:false, cc:false,  cfg:false},
+  AUXILIAR:                  {sol:true,  vis:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  comp:true,  pag:true,  cc:true,   cfg:false},
+  "AUXILIAR ADMINISTRATIVO": {sol:true,  vis:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  comp:true,  pag:true,  cc:true,   cfg:false},
+  AUTORIZADOR:               {sol:true,  vis:true,  apr:true,  hist:true,  req:false, lreq:false, adq:false, comp:false, pag:false, cc:false,  cfg:false},
+  ADMINISTRADOR:             {sol:true,  vis:true,  apr:true,  hist:true,  req:true,  lreq:true,  adq:true,  comp:true,  pag:true,  cc:true,   cfg:true}
 };
 
 // ============================================================
@@ -1709,11 +1711,11 @@ var NAV = [
   {
     id:"solicitudes", icon:"📋", label:"Solicitudes",
     items:[
-      {id:"sec-solicitud",    icon:"📝", label:"Nueva",         perm:"sol",  bdg:""},
-      {id:"sec-sol-complementar", icon:"📋", label:"Complementar", perm:"comp", bdg:""},
-      {id:"sec-sol-modificar",icon:"✏️", label:"Modificar",     perm:"sol",  bdg:""},
-      {id:"sec-historial",    icon:"📂", label:"Visualizar",    perm:"hist", bdg:""},
-      {id:"sec-aprobaciones", icon:"✅", label:"Autorizar",     perm:"apr",  bdg:"apr"},
+      {id:"sec-solicitud",        icon:"📝", label:"Nueva",         perm:"sol",  bdg:""},
+      {id:"sec-sol-complementar", icon:"📋", label:"Complementar",  perm:"comp", bdg:""},
+      {id:"sec-sol-modificar",    icon:"✏️", label:"Modificar",     perm:"sol",  bdg:""},
+      {id:"sec-historial",        icon:"📂", label:"Visualizar",    perm:"vis",  bdg:""},
+      {id:"sec-aprobaciones",     icon:"✅", label:"Autorizar",     perm:"apr",  bdg:"apr"},
     ]
   },
   {
@@ -1940,7 +1942,7 @@ function entrar(){
   // Construir sidebar
   buildSidebar();
   // Activar primera sección visible
-  var first=SE.p.sol?"sec-solicitud":SE.p.apr?"sec-aprobaciones":SE.p.hist?"sec-historial":SE.p.req?"sec-requisiciones":"sec-lista-req";
+  var first=SE.p.sol?"sec-solicitud":SE.p.apr?"sec-aprobaciones":SE.p.hist?"sec-historial":SE.p.req?"sec-requisiciones":SE.p.comp?"sec-comp-facturas":"sec-lista-req";
   document.getElementById(first).classList.add("active");
   var firstNav=document.getElementById("nav-"+first);
   if(firstNav) firstNav.classList.add("active");
@@ -2451,6 +2453,7 @@ function rHist(){
   var touched=selEs?selEs.getAttribute("data-touched"):"";
   var estadoEfectivo=es?(es):(touched?"":"PENDIENTE");
   var sols=getSols().filter(function(s){
+    if(SE.perfil==="SOLICITANTE"&&s.registrador!==SE.nombre) return false;
     if(estadoEfectivo&&s.estado!==estadoEfectivo) return false;
     if(area&&s.area!==area) return false;
     if(de&&s.fecha<de) return false;
@@ -5030,25 +5033,43 @@ function compGuardarRecepcion(tipDoc){
     };
     comps.unshift(comp);
     if(!setComps(comps)){toast("Error al guardar","err");return;}
-    // Marcar orden como SURTIDA
-    var ords=getOrds();
-    var reqIdAsoc="";
-    for(var j=0;j<ords.length;j++){
-      if(ords[j].id===compOrdSel.id){ords[j].estado="SURTIDA";reqIdAsoc=ords[j].reqId||compOrdSel.reqId||"";break;}
+  }
+  // ── Recalcular estado de OC y Requisición (aplica para nueva y existente) ──
+  var reqIdAsoc=compOrdSel.reqId||"";
+  // Calcular si todos los productos de la OC fueron recibidos
+  var totalPedido={};
+  (compOrdSel.productos||[]).forEach(function(p){
+    totalPedido[p.descripcion]=(totalPedido[p.descripcion]||0)+parseFloat(p.cantidad||0);
+  });
+  var totalRecibido={};
+  prodsSel.forEach(function(p){
+    totalRecibido[p.descripcion]=(totalRecibido[p.descripcion]||0)+parseFloat(p.cantidad||0);
+  });
+  var ocCompleta=true;
+  Object.keys(totalPedido).forEach(function(desc){
+    if((totalRecibido[desc]||0)<totalPedido[desc]) ocCompleta=false;
+  });
+  // Actualizar estado de la OC
+  var ords=getOrds();
+  for(var j=0;j<ords.length;j++){
+    if(ords[j].id===compOrdSel.id){
+      ords[j].estado=ocCompleta?"SURTIDA":"SURTIDA PARCIALMENTE";
+      if(!reqIdAsoc) reqIdAsoc=ords[j].reqId||"";
+      break;
     }
-    setOrds(ords);
-    // Recalcular estado de la requisición: SURTIDA PARCIALMENTE o CERRADO
-    if(reqIdAsoc){
-      var reqs=getReqs();
-      for(var k=0;k<reqs.length;k++){
-        if(reqs[k].id===reqIdAsoc){
-          var pendientes=adqGetPendientes(reqIdAsoc);
-          reqs[k].estado=pendientes.length?"SURTIDA PARCIALMENTE":"CERRADO";
-          break;
-        }
+  }
+  setOrds(ords);
+  // Recalcular estado de la Requisición
+  if(reqIdAsoc){
+    var reqs=getReqs();
+    for(var k=0;k<reqs.length;k++){
+      if(reqs[k].id===reqIdAsoc){
+        var pendientes=adqGetPendientes(reqIdAsoc);
+        reqs[k].estado=pendientes.length?"SURTIDA PARCIALMENTE":"CERRADO";
+        break;
       }
-      setReqs(reqs);
     }
+    setReqs(reqs);
   }
   toast("✔ Recepción registrada","ok");
   if(tipDoc==="vale") rqAbrirVentana(compBuildVale(comp,compOrdSel));
