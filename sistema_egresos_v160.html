@@ -3481,6 +3481,37 @@ function uBadges(){
 // ============================================================
 var TIPOS_BENEF_OBL=["APOYOS ECONOMICOS","DONACIONES A TERCEROS"];
 var TIPOS_MTTO_VEH=["MTTO DE VEHICULOS","MTTO DE VEHICULOS DE SEG PUB"];
+var COMB_VEHICULOS = [
+  {eco:1,  area:"ALUMBRADO",        placa:"XV38147",  desc:"FORD F150 PICK UP",                       marca:"FORD",          anio:"2008", color:"BLANCO"},
+  {eco:2,  area:"AYUDANTIA",        placa:"XT98961",  desc:"CHEVROLET SILVERADO 3500",                 marca:"CHEVROLET",     anio:"2006", color:"BLANCO"},
+  {eco:28, area:"DEPORTE",          placa:"N/A",      desc:"JOHN DEERE TRACTOR PODADOR",               marca:"JOHN DEERE",    anio:"N/A",  color:"VERDE"},
+  {eco:3,  area:"DIF",              placa:"59TCK",    desc:"CHRYSLER RAM PROMASTER",                   marca:"CHRYSLER",      anio:"2017", color:"BLANCO"},
+  {eco:4,  area:"DIF",              placa:"XYU522C",  desc:"NISSAN X-TRAIL",                           marca:"NISSAN",        anio:"2025", color:"GRIS"},
+  {eco:5,  area:"DIF",              placa:"72TCF",    desc:"VAN EXPRESS CHEVROLET GM",                  marca:"CHEVROLET",     anio:"2014", color:"BLANCO"},
+  {eco:6,  area:"LIMPIA PUBLICA",   placa:"YD0227A",  desc:"CAMION COMPACTADOR INTERNATIONAL 4300-210", marca:"INTERNATIONAL", anio:"2018", color:"BLANCO"},
+  {eco:7,  area:"LIMPIA PUBLICA",   placa:"XV3575A",  desc:"CHEVROLET 3500 COMPACTADOR CHICO",         marca:"CHEVROLET",     anio:"2016", color:"GRIS"},
+  {eco:8,  area:"LIMPIA PUBLICA",   placa:"XY01663",  desc:"NISSAN NP300 ESTACAS",                     marca:"NISSAN",        anio:"2018", color:"BLANCO"},
+  {eco:9,  area:"OBRAS PUBLICAS",   placa:"XS2414B",  desc:"NISSAN NP 300",                            marca:"NISSAN",        anio:"2020", color:"BLANCO"},
+  {eco:10, area:"PRESIDENCIA",      placa:"XX6157A",  desc:"CHEVROLET CHEYENNE",                       marca:"CHEVROLET",     anio:"2021", color:"GRIS"},
+  {eco:11, area:"PRESIDENCIA",      placa:"YM1885A",  desc:"FORD RANGER",                              marca:"FORD",          anio:"2022", color:"BLANCO"},
+  {eco:12, area:"PRESIDENCIA",      placa:"99F953",   desc:"MAZDA HIBRIDO",                            marca:"MAZDA",         anio:"2024", color:"GRIS"},
+  {eco:13, area:"PROTECCION CIVIL", placa:"XX0847A",  desc:"CHEVROLET SILVERADO DOB CAB",              marca:"CHEVROLET",     anio:"2020", color:"BLANCO"},
+  {eco:14, area:"PROTECCION CIVIL", placa:"AM955XX",  desc:"FORD ECONOLINE",                           marca:"FORD",          anio:"2006", color:"BLANCO"},
+  {eco:15, area:"PROTECCION CIVIL", placa:"92YMT6",   desc:"HONDA CUATRIMOTO TRX",                     marca:"HONDA",         anio:"2014", color:"ROJA"},
+  {eco:16, area:"PROTECCION CIVIL", placa:"PC003",    desc:"LANCHA 1021147",                           marca:"SIN ESPECIFICAR",anio:"N/A", color:"BLANCO"},
+  {eco:17, area:"PROTECCION CIVIL", placa:"27YMU5",   desc:"RUNGA MOTOCARRO 320",                      marca:"RUNGA",         anio:"2023", color:"NEGRO"},
+  {eco:18, area:"PROTECCION CIVIL", placa:"71YSG6",   desc:"RYDER RUNGA MOTOCARRO",                    marca:"RUNGA",         anio:"2024", color:"NEGRO"},
+  {eco:19, area:"SECRETARIA",       placa:"YUM784B",  desc:"CHEVROLET AVEO",                           marca:"CHEVROLET",     anio:"2020", color:"BLANCO"},
+  {eco:20, area:"SECRETARIA",       placa:"YAT898A",  desc:"NISSAN URVAN",                             marca:"NISSAN",        anio:"2007", color:"BLANCO"},
+  {eco:21, area:"SEGURIDAD PUBLICA",placa:"VE37H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
+  {eco:22, area:"SEGURIDAD PUBLICA",placa:"VE38H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
+  {eco:23, area:"SEGURIDAD PUBLICA",placa:"VE39H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
+  {eco:24, area:"SEGURIDAD PUBLICA",placa:"VE40H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
+  {eco:25, area:"SEGURIDAD PUBLICA",placa:"VE41H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
+  {eco:26, area:"SEGURIDAD PUBLICA",placa:"VE42H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
+  {eco:27, area:"SEGURIDAD PUBLICA",placa:"XX24265",  desc:"PATRULLA NISSAN NP300",                    marca:"NISSAN",        anio:"2016", color:"AZUL"},
+  {eco:29, area:"SEGURIDAD PUBLICA",placa:"",          desc:"PICK UP FRISON T8",                        marca:"JAC",           anio:"2026", color:"AZUL"},
+];
 function onTS(){
   var t=document.getElementById("st").value;
   document.getElementById("sb-div").style.display=(TIPOS_BENEF_OBL.indexOf(t)>=0)?"block":"none";
@@ -3523,6 +3554,10 @@ function enviarSol(){
   var ben=document.getElementById("sben").value.trim().toUpperCase();
   if(!f||!t||!d){toast("Completa todos los campos obligatorios","err");return;}
   if(TIPOS_BENEF_OBL.indexOf(t)>=0&&!ben){toast("Ingresa el nombre del beneficiario","err");return;}
+  if(TIPOS_MTTO_VEH.indexOf(t)>=0){
+    var _eco=parseInt((document.getElementById("sv-veh")||{value:""}).value)||0;
+    if(!_eco){toast("Selecciona el vehículo para mantenimiento","err");return;}
+  }
   var sol={
     id:String(Date.now()),
     folio:genFolio(),
@@ -9274,8 +9309,6 @@ function rqAddProd(desc,cant,um,precio,aplicaIVA,tasaIEPS){
 // MÓDULO PARQUE VEHICULAR — BITÁCORA DE MANTENIMIENTO
 // ============================================================
 
-var TIPOS_MTTO_VEH=["MTTO DE VEHICULOS","MTTO DE VEHICULOS DE SEG PUB"];
-
 function getMttoReg(){return JSON.parse(localStorage.getItem("mtto_bitacora")||"[]");}
 function setMttoReg(v){localStorage.setItem("mtto_bitacora",JSON.stringify(v));}
 
@@ -9535,37 +9568,6 @@ function mttoImprimirAcumulada(){
 // MÓDULO COMBUSTIBLE — Flujo: XML → OP → Bitácora
 // ============================================================
 
-var COMB_VEHICULOS = [
-  {eco:1,  area:"ALUMBRADO",        placa:"XV38147",  desc:"FORD F150 PICK UP",                       marca:"FORD",          anio:"2008", color:"BLANCO"},
-  {eco:2,  area:"AYUDANTIA",        placa:"XT98961",  desc:"CHEVROLET SILVERADO 3500",                 marca:"CHEVROLET",     anio:"2006", color:"BLANCO"},
-  {eco:28, area:"DEPORTE",          placa:"N/A",      desc:"JOHN DEERE TRACTOR PODADOR",               marca:"JOHN DEERE",    anio:"N/A",  color:"VERDE"},
-  {eco:3,  area:"DIF",              placa:"59TCK",    desc:"CHRYSLER RAM PROMASTER",                   marca:"CHRYSLER",      anio:"2017", color:"BLANCO"},
-  {eco:4,  area:"DIF",              placa:"XYU522C",  desc:"NISSAN X-TRAIL",                           marca:"NISSAN",        anio:"2025", color:"GRIS"},
-  {eco:5,  area:"DIF",              placa:"72TCF",    desc:"VAN EXPRESS CHEVROLET GM",                  marca:"CHEVROLET",     anio:"2014", color:"BLANCO"},
-  {eco:6,  area:"LIMPIA PUBLICA",   placa:"YD0227A",  desc:"CAMION COMPACTADOR INTERNATIONAL 4300-210", marca:"INTERNATIONAL", anio:"2018", color:"BLANCO"},
-  {eco:7,  area:"LIMPIA PUBLICA",   placa:"XV3575A",  desc:"CHEVROLET 3500 COMPACTADOR CHICO",         marca:"CHEVROLET",     anio:"2016", color:"GRIS"},
-  {eco:8,  area:"LIMPIA PUBLICA",   placa:"XY01663",  desc:"NISSAN NP300 ESTACAS",                     marca:"NISSAN",        anio:"2018", color:"BLANCO"},
-  {eco:9,  area:"OBRAS PUBLICAS",   placa:"XS2414B",  desc:"NISSAN NP 300",                            marca:"NISSAN",        anio:"2020", color:"BLANCO"},
-  {eco:10, area:"PRESIDENCIA",      placa:"XX6157A",  desc:"CHEVROLET CHEYENNE",                       marca:"CHEVROLET",     anio:"2021", color:"GRIS"},
-  {eco:11, area:"PRESIDENCIA",      placa:"YM1885A",  desc:"FORD RANGER",                              marca:"FORD",          anio:"2022", color:"BLANCO"},
-  {eco:12, area:"PRESIDENCIA",      placa:"99F953",   desc:"MAZDA HIBRIDO",                            marca:"MAZDA",         anio:"2024", color:"GRIS"},
-  {eco:13, area:"PROTECCION CIVIL", placa:"XX0847A",  desc:"CHEVROLET SILVERADO DOB CAB",              marca:"CHEVROLET",     anio:"2020", color:"BLANCO"},
-  {eco:14, area:"PROTECCION CIVIL", placa:"AM955XX",  desc:"FORD ECONOLINE",                           marca:"FORD",          anio:"2006", color:"BLANCO"},
-  {eco:15, area:"PROTECCION CIVIL", placa:"92YMT6",   desc:"HONDA CUATRIMOTO TRX",                     marca:"HONDA",         anio:"2014", color:"ROJA"},
-  {eco:16, area:"PROTECCION CIVIL", placa:"PC003",    desc:"LANCHA 1021147",                           marca:"SIN ESPECIFICAR",anio:"N/A", color:"BLANCO"},
-  {eco:17, area:"PROTECCION CIVIL", placa:"27YMU5",   desc:"RUNGA MOTOCARRO 320",                      marca:"RUNGA",         anio:"2023", color:"NEGRO"},
-  {eco:18, area:"PROTECCION CIVIL", placa:"71YSG6",   desc:"RYDER RUNGA MOTOCARRO",                    marca:"RUNGA",         anio:"2024", color:"NEGRO"},
-  {eco:19, area:"SECRETARIA",       placa:"YUM784B",  desc:"CHEVROLET AVEO",                           marca:"CHEVROLET",     anio:"2020", color:"BLANCO"},
-  {eco:20, area:"SECRETARIA",       placa:"YAT898A",  desc:"NISSAN URVAN",                             marca:"NISSAN",        anio:"2007", color:"BLANCO"},
-  {eco:21, area:"SEGURIDAD PUBLICA",placa:"VE37H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
-  {eco:22, area:"SEGURIDAD PUBLICA",placa:"VE38H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
-  {eco:23, area:"SEGURIDAD PUBLICA",placa:"VE39H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
-  {eco:24, area:"SEGURIDAD PUBLICA",placa:"VE40H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
-  {eco:25, area:"SEGURIDAD PUBLICA",placa:"VE41H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
-  {eco:26, area:"SEGURIDAD PUBLICA",placa:"VE42H",    desc:"MOTOPATRULLA HONDA XR 150",                marca:"HONDA",         anio:"2023", color:"AZUL"},
-  {eco:27, area:"SEGURIDAD PUBLICA",placa:"XX24265",  desc:"PATRULLA NISSAN NP300",                    marca:"NISSAN",        anio:"2016", color:"AZUL"},
-  {eco:29, area:"SEGURIDAD PUBLICA",placa:"",          desc:"PICK UP FRISON T8",                        marca:"JAC",           anio:"2026", color:"AZUL"},
-];
 
 function getCombFacts(){return JSON.parse(localStorage.getItem("comb_facturas")||"[]");}
 function setCombFacts(v){localStorage.setItem("comb_facturas",JSON.stringify(v));}
