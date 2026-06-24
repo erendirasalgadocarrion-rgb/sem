@@ -3542,17 +3542,17 @@ function rHist(){
     var puedeCancelar=SE&&SE.p&&SE.p.cfg&&s.estado!=="CANCELADA"&&s.estado!=="CERRADO";
     var puedeEliminar=SE&&SE.p&&SE.p.cfg;
     return "<tr style='"+bg+"'>"+
-      "<td style='font-weight:700;font-size:11px;'>"+s.folio+"</td>"+
+      "<td style='font-weight:700;font-size:11px;color:var(--vino);cursor:pointer;text-decoration:underline;' onclick='verDet(\""+s.id+"\")'>"+s.folio+"</td>"+
       "<td>"+s.fecha+"</td>"+
       "<td style='font-size:11px;'>"+s.area+"</td>"+
       "<td style='font-size:11px;'>"+s.registrador+"</td>"+
       "<td style='font-size:11px;'>"+s.tipo+"</td>"+
       "<td style='font-size:11px;max-width:180px;'>"+s.descripcion+"</td>"+
-      "<td style='text-align:center;'><span class='est "+cls+"'>"+s.estado+"</span></td>"+
+      "<td style='text-align:center;'><span class='sb "+cls+"'>"+s.estado+"</span></td>"+
       "<td style='text-align:center;white-space:nowrap;'>"+
-        (puedeCancelar?"<button class='btn bo btm' onclick='histCancelar(\""+s.id+"\")' title='Cancelar'>✕</button> ":"")+
-        (puedeEliminar?"<button class='btn bd btm' onclick='histEliminar(\""+s.id+"\")' title='Eliminar'>🗑</button>":"")+ 
-      "</td>"+
+        "<button class='btn bo btm' onclick='verDet(\""+s.id+"\")'> 👁 Ver</button> "+
+        (puedeCancelar?"<button class='btn bo btm' onclick='histCancelar(\""+s.id+"\")' title='Cancelar'>✕ Cancelar</button> ":"")+
+        (puedeEliminar?"<button class='btn bd btm' onclick='histEliminar(\""+s.id+"\")'> 🗑</button>":"")+
     "</tr>";
   }).join("");
 }
@@ -3622,12 +3622,12 @@ function rSolModificar(){
     var cls = sCls(s.estado);
     var puedeEditar = s.registrador===SE.nombre || SE.p.cfg;
     return "<tr>"+
-      "<td style='font-weight:700;font-size:11px;'>"+s.folio+"</td>"+
+      "<td style='font-weight:700;font-size:11px;color:var(--vino);cursor:pointer;text-decoration:underline;' onclick='verDet(\""+s.id+"\")'>"+s.folio+"</td>"+
       "<td>"+s.fecha+"</td>"+
       "<td style='font-size:11px;'>"+s.area+"</td>"+
-      "<td style='font-size:11px;'>"+s.solicitante+"</td>"+
+      "<td style='font-size:11px;'>"+s.registrador+"</td>"+
       "<td style='font-size:11px;'>"+s.tipo+"</td>"+
-      "<td style='text-align:center;'><span class='est "+cls+"'>"+s.estado+"</span></td>"+
+      "<td style='text-align:center;'><span class='sb "+cls+"'>"+s.estado+"</span></td>"+
       "<td style='text-align:center;white-space:nowrap;'>"+
         "<button class='btn bo btm' onclick='verDet(\""+ s.id+"\")'> 👁 Ver</button> "+
         (puedeEditar?"<button class='btn bw btm' onclick='abrirEdit(\""+ s.id+"\")'> ✏️ Editar</button>":"")+ 
