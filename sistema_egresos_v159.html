@@ -2086,13 +2086,19 @@ tr:last-child td{border-bottom:none;}
         <div class="fi"><label>Total</label><input type="text" id="cxml-total" readonly style="background:#fdf2f4;color:var(--vino);font-weight:700;font-size:14px;"></div>
       </div>
 
-      <!-- Período -->
+      <!-- Período, Fondo, Programa -->
       <div class="fg" style="margin-bottom:14px;">
         <div class="fi"><label>Período *</label>
           <select id="cxml-periodo"><option value="">Seleccionar período</option></select>
         </div>
         <div class="fi"><label>Gasolinera</label>
           <input type="text" id="cxml-gasolinera" placeholder="Nombre de la gasolinera">
+        </div>
+        <div class="fi"><label>Fondo *</label>
+          <select id="cxml-fondo"><option value="">Seleccionar</option></select>
+        </div>
+        <div class="fi full"><label>Programa Presupuestal *</label>
+          <select id="cxml-programa"><option value="">Seleccionar</option></select>
         </div>
       </div>
 
@@ -2135,12 +2141,13 @@ tr:last-child td{border-bottom:none;}
       <div class="tw">
         <table>
           <thead><tr>
-            <th>#</th><th>Descripción XML</th><th style="text-align:right;">Litros</th>
+            <th>#</th><th style="min-width:100px;">Fecha carga *</th>
+            <th style="text-align:right;">Litros</th>
+            <th>Descripción XML</th>
             <th style="text-align:right;">Importe</th>
-            <th style="min-width:100px;">Fecha carga *</th>
             <th style="min-width:200px;">Vehículo *</th>
-            <th style="min-width:110px;">Área</th>
             <th style="min-width:80px;">Placa</th>
+            <th style="min-width:110px;">Área</th>
             <th style="min-width:140px;">Operador *</th>
           </tr></thead>
           <tbody id="cbit-tbody"></tbody>
@@ -9195,6 +9202,22 @@ function cxmlInitPeriodos(){
     var prefix=id==="cxml-periodo"?"<option value=''>Seleccionar período</option>":"<option value=''>Todos los períodos</option>";
     el.innerHTML=prefix+p;
   });
+  // Fondos
+  var selF=document.getElementById("cxml-fondo");
+  if(selF){
+    selF.innerHTML="<option value=''>Seleccionar</option>"+
+      getFondos().filter(function(f){return f.activo;}).map(function(f){
+        return "<option>"+f.nombre+"</option>";
+      }).join("");
+  }
+  // Programas
+  var selP=document.getElementById("cxml-programa");
+  if(selP){
+    selP.innerHTML="<option value=''>Seleccionar</option>"+
+      getProgs().filter(function(p){return p.activo;}).map(function(p){
+        return "<option value='"+p.clave+" "+p.desc+"'>"+p.clave+" "+p.desc+"</option>";
+      }).join("");
+  }
 }
 
 function cxmlVehOpts(){
@@ -9339,11 +9362,15 @@ function cxmlGuardar(){
   if(facts.filter(function(f){return f.folio===cxmlDatosActuales.folio;}).length){
     toast("Esta factura ya está registrada: "+cxmlDatosActuales.folio,"err");return;
   }
+  var fondo=document.getElementById("cxml-fondo").value||"";
+  var programa=document.getElementById("cxml-programa").value||"";
   var nueva=Object.assign({},cxmlDatosActuales,{
     id:String(Date.now()),
     periodo:per.value,
     periodo_label:perLabel,
     gasolinera:gasolinera,
+    fondo:fondo,
+    programa:programa,
     bitacoraCompleta:false,
     fechaRegistro:new Date().toISOString()
   });
@@ -9361,10 +9388,15 @@ function cxmlImprimirOP(){
   var per=document.getElementById("cxml-periodo");
   var perLabel=per.options[per.selectedIndex]?per.options[per.selectedIndex].text:"";
   var gasolinera=document.getElementById("cxml-gasolinera").value.trim().toUpperCase()||cxmlDatosActuales.emisor;
-  cxmlPrintOP(cxmlDatosActuales,perLabel,gasolinera);
+  var fondo=document.getElementById("cxml-fondo").value||"";
+  var programa=document.getElementById("cxml-programa").value||"";
+  if(!fondo||!programa){toast("Selecciona el Fondo y el Programa Presupuestal","err");return;}
+  cxmlPrintOP(cxmlDatosActuales,perLabel,gasolinera,fondo,programa);
 }
 
-function cxmlPrintOP(f,perLabel,gasolinera){
+function cxmlPrintOP(f,perLabel,gasolinera,fondo,programa){
+  fondo=fondo||f.fondo||"";
+  programa=programa||f.programa||"";
   var totLitros=f.lineas.reduce(function(s,l){return s+l.cantidad;},0);
   var html="<!DOCTYPE html><html><head><meta charset='UTF-8'>"+
   "<title>Orden de Pago Combustible "+f.folio+"</title>"+
@@ -9391,6 +9423,8 @@ function cxmlPrintOP(f,perLabel,gasolinera){
   "<td style='font-weight:700;'>"+f.folio+"</td>"+
   "<td>"+f.fecha+"</td><td>"+f.rfc+"</td><td>"+gasolinera+"</td><td>"+perLabel+"</td>"+
   "</tr></tbody></table>"+
+  "<table><thead><tr><th>Fondo</th><th>Programa Presupuestal</th></tr></thead>"+
+  "<tbody><tr><td style='font-weight:700;'>"+fondo+"</td><td>"+programa+"</td></tr></tbody></table>"+
   "<table><thead><tr>"+
   "<th>#</th><th>Descripción</th><th style='text-align:right;'>Litros</th><th>U.M.</th>"+
   "<th style='text-align:right;'>Precio Unit.</th>"+
@@ -9454,13 +9488,13 @@ function cbitCargarLineas(){
     var bg=i%2?"background:#fdf2f4;":"";
     return "<tr style='"+bg+"' id='cbit-row-"+i+"'>"+
       "<td style='text-align:center;font-weight:700;'>"+(i+1)+"</td>"+
-      "<td style='font-size:11px;max-width:180px;'>"+l.desc+"</td>"+
-      "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td>"+
-      "<td style='text-align:right;'>"+fmt(l.importe)+"</td>"+
       "<td><input type='date' id='cbit-fecha-"+i+"' value='"+(l.fecha||f.fecha)+"' style='width:120px;'></td>"+
+      "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td>"+
+      "<td style='font-size:11px;max-width:200px;'>"+l.desc+"</td>"+
+      "<td style='text-align:right;font-weight:600;'>"+fmt(l.importe)+"</td>"+
       "<td><select id='cbit-veh-"+i+"' onchange='cbitAutoVeh("+i+")' style='min-width:200px;'>"+vehOpts+"</select></td>"+
-      "<td><input type='text' id='cbit-area-"+i+"' readonly value='"+(l.area||"")+"' style='background:#f5f5f5;min-width:100px;'></td>"+
       "<td><input type='text' id='cbit-placa-"+i+"' readonly value='"+(l.placa||"")+"' style='background:#f5f5f5;width:80px;'></td>"+
+      "<td><input type='text' id='cbit-area-"+i+"' readonly value='"+(l.area||"")+"' style='background:#f5f5f5;min-width:100px;'></td>"+
       "<td><input type='text' id='cbit-op-"+i+"' value='"+(l.operador||"")+"' placeholder='Nombre operador' style='min-width:130px;'></td>"+
     "</tr>";
   }).join("");
@@ -9542,21 +9576,22 @@ function cbitImprimir(){
   "<div><b>Gasolinera:</b> "+f.gasolinera+"</div>"+
   "<div><b>RFC:</b> "+f.rfc+"</div></div>"+
   "<table><thead><tr>"+
-  "<th>#</th><th>Descripción</th><th>Fecha Carga</th><th>Vehículo</th>"+
-  "<th>Área</th><th>Placa</th>"+
+  "<th>#</th><th>Fecha Carga</th>"+
   "<th style='text-align:right;'>Litros</th>"+
-  "<th style='text-align:right;'>Importe</th><th>Operador</th>"+
+  "<th>Descripción</th>"+
+  "<th style='text-align:right;'>Importe</th>"+
+  "<th>Vehículo</th><th>Placa</th><th>Área</th><th>Operador</th>"+
   "</tr></thead><tbody>"+
   f.lineas.map(function(l,i){
     return "<tr>"+
       "<td style='text-align:center;'>"+(i+1)+"</td>"+
-      "<td>"+l.desc+"</td>"+
       "<td>"+(l.fecha||"—")+"</td>"+
-      "<td>"+(l.vehiculo||"—")+"</td>"+
-      "<td>"+(l.area||"—")+"</td>"+
-      "<td>"+(l.placa||"—")+"</td>"+
       "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td>"+
+      "<td>"+l.desc+"</td>"+
       "<td style='text-align:right;'>"+fmt(l.importe)+"</td>"+
+      "<td>"+(l.vehiculo||"—")+"</td>"+
+      "<td>"+(l.placa||"—")+"</td>"+
+      "<td>"+(l.area||"—")+"</td>"+
       "<td>"+(l.operador||"—")+"</td>"+
     "</tr>";
   }).join("")+
@@ -9571,9 +9606,10 @@ function cbitImprimir(){
   "<b>IVA:</b> "+fmt(f.iva)+" &nbsp;|&nbsp; "+
   "<b>TOTAL:</b> <span style='color:#6B0F1A;font-weight:700;'>"+fmt(f.total)+"</span></div>"+
   "<div class='firmas'>"+
-  "<div class='firma'>___________________________<br>MELANIE AYLIN ORTIZ CARVAJAL<br>Encargada Parque Vehicular</div>"+
-  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
-  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
+  "<div class='firma'>___________________________<br>MELANIE AYLIN ORTIZ CARVAJAL<br>Encargada Parque Vehicular<br><em>Solicita</em></div>"+
+  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal<br><em>Revisa</em></div>"+
+  "<div class='firma'>___________________________<br>LIC. ERENDIRA SALGADO CARRIÓN<br>Titular OIC<br><em>Revisa</em></div>"+
+  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal<br><em>Autoriza</em></div>"+
   "</div></body></html>";
   var w=window.open("","_blank","width=1100,height=750");
   w.document.write(html);w.document.close();w.print();
@@ -9629,7 +9665,7 @@ function chistRender(){
 function chistImprimirOP(id){
   var f=getCombFacts().filter(function(x){return x.id===id;})[0];
   if(!f) return;
-  cxmlPrintOP(f,f.periodo_label,f.gasolinera);
+  cxmlPrintOP(f,f.periodo_label,f.gasolinera,f.fondo,f.programa);
 }
 
 function chistImprimirBit(id){
