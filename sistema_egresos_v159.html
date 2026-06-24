@@ -676,6 +676,16 @@ tr:last-child td{border-bottom:none;}
           <label>Nombre del Beneficiario *</label>
           <input type="text" id="sben" placeholder="Nombre completo">
         </div>
+        <div class="fi" id="sv-div" style="margin-bottom:12px;display:none;">
+          <label>Vehículo *</label>
+          <select id="sv-veh" onchange="onSVVeh()">
+            <option value="">Seleccionar vehículo</option>
+          </select>
+        </div>
+        <div class="fg" id="sv-info" style="display:none;margin-bottom:12px;">
+          <div class="fi"><label>Placa</label><input type="text" id="sv-placa" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>Área</label><input type="text" id="sv-area" readonly style="background:#f5f5f5;"></div>
+        </div>
         <div class="fi" style="margin-bottom:16px;">
           <label>Descripción *</label>
           <textarea id="sd" maxlength="300" rows="4" oninput="document.getElementById('sc').textContent=this.value.length" placeholder="Describe brevemente el gasto (máx. 300 caracteres)..."></textarea>
@@ -2053,6 +2063,71 @@ tr:last-child td{border-bottom:none;}
 
 
 <!-- ======================================================= -->
+<!-- MÓDULO: PARQUE VEHICULAR — BITÁCORA MANTENIMIENTO        -->
+<!-- ======================================================= -->
+<div class="sec" id="sec-mtto-bitacora">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>🚗 Bitácora de Mantenimiento de Vehículos</h3><p>Registro de servicios de mantenimiento preventivo y correctivo</p></div></div>
+
+  <!-- Filtros -->
+  <div class="card">
+    <div class="fb" style="margin-bottom:10px;">
+      <select id="mtto-fil-veh" onchange="mttoRender()">
+        <option value="">Todos los vehículos</option>
+      </select>
+      <select id="mtto-fil-tipo" onchange="mttoRender()">
+        <option value="">Todos los tipos</option>
+        <option value="PREVENTIVO">PREVENTIVO</option>
+        <option value="CORRECTIVO">CORRECTIVO</option>
+      </select>
+      <input type="date" id="mtto-fil-de" onchange="mttoRender()" title="Desde">
+      <input type="date" id="mtto-fil-hasta" onchange="mttoRender()" title="Hasta">
+      <button class="btn bp btm" onclick="mttoImprimirAcumulada()">🖨️ Imprimir historial</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Folio Sol.</th><th>Fecha</th><th>Vehículo</th><th>Placa</th><th>Área</th>
+        <th>Tipo Mtto</th><th>Descripción Servicio</th><th>Taller/Proveedor</th>
+        <th style="text-align:right;">Costo</th><th style="text-align:center;">Acciones</th>
+      </tr></thead>
+      <tbody id="mtto-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- MODAL: Editar registro bitácora mantenimiento -->
+<div class="mo" id="m-mtto-edit"><div class="md">
+  <h2>🚗 Registro Bitácora Mantenimiento<button class="mo-close" onclick="cm('m-mtto-edit')">✕</button></h2>
+  <input type="hidden" id="mtto-ed-solid">
+  <div class="fg">
+    <div class="fi"><label>Folio Solicitud</label><input type="text" id="mtto-ed-folio" readonly style="background:#f5f5f5;font-weight:700;"></div>
+    <div class="fi"><label>Fecha</label><input type="date" id="mtto-ed-fecha"></div>
+    <div class="fi"><label>Vehículo</label><input type="text" id="mtto-ed-vehiculo" readonly style="background:#f5f5f5;"></div>
+    <div class="fi"><label>Placa</label><input type="text" id="mtto-ed-placa" readonly style="background:#f5f5f5;"></div>
+    <div class="fi"><label>Área</label><input type="text" id="mtto-ed-area" readonly style="background:#f5f5f5;"></div>
+    <div class="fi"><label>Tipo Mantenimiento *</label>
+      <select id="mtto-ed-tipo">
+        <option value="PREVENTIVO">PREVENTIVO</option>
+        <option value="CORRECTIVO">CORRECTIVO</option>
+      </select>
+    </div>
+    <div class="fi full"><label>Descripción del Servicio *</label>
+      <textarea id="mtto-ed-desc" rows="3" placeholder="Describe el servicio realizado..."></textarea>
+    </div>
+    <div class="fi"><label>Taller / Proveedor *</label>
+      <input type="text" id="mtto-ed-taller" placeholder="Nombre del taller o proveedor">
+    </div>
+    <div class="fi"><label>Costo</label>
+      <input type="number" id="mtto-ed-costo" step="0.01" min="0" placeholder="0.00">
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn bo" onclick="cm('m-mtto-edit')">Cancelar</button>
+    <button class="btn bgold" onclick="mttoImprimirRegistro()">🖨️ Imprimir</button>
+    <button class="btn bp" onclick="mttoGuardarEdit()">💾 Guardar</button>
+  </div>
+</div></div>
+
+<!-- ======================================================= -->
 <!-- MÓDULO: COMBUSTIBLE                                      -->
 <!-- ======================================================= -->
 
@@ -2406,6 +2481,7 @@ var USUARIOS = [
   {nombre:"LIC. AMALIA ROMERO AGUILERA",           area:"SECRETARIA",           perfil:"AUTORIZADOR"},
   {nombre:"LIC. EDUARDO RICARDO GARCIA REYES",     area:"TRANSPARENCIA",        perfil:"SOLICITANTE"},
   {nombre:"LIC. ERENDIRA SALGADO CARRION",         area:"CONTRALORIA",          perfil:"ADMINISTRADOR", pin:"5678"},
+  {nombre:"MELANIE AYLIN ORTIZ CARVAJAL",           area:"PARQUE VEHICULAR",     perfil:"PARQUE VEHICULAR"},
   {nombre:"LIC. EZEQUIEL CORRO SANTOS",            area:"PROTECCION CIVIL",     perfil:"SOLICITANTE"},
   {nombre:"LIC. HECTOR MANUEL DELGADO ROJAS",      area:"JURIDICO",             perfil:"SOLICITANTE"},
   {nombre:"LIC. ILSE DE LA ANGELES HERNANDEZ JIMENEZ",area:"REGISTRO CIVIL",   perfil:"SOLICITANTE"},
@@ -2427,12 +2503,13 @@ var USUARIOS = [
 // Permisos: sol=solicitar, apr=aprobar, hist=ver historial, cfg=admin
 var PM = {
   // sol=Nueva  vis=Visualizar propias  apr=Autorizar  hist=Ver todas  comp=Complementar/Comprobaciones
-  // req=Nueva Req  lreq=Modificar Req  adq=Adquisiciones  pag=Pagos  cc=Caja Chica  cfg=Config
-  SOLICITANTE:               {sol:true,  vis:true,  apr:false, hist:false, req:false, lreq:false, adq:false, cmp:false, comp:true,  rec:false, pag:false, cc:false,  cfg:false},
-  AUXILIAR:                  {sol:true,  vis:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  cmp:true,  comp:true,  rec:true,  pag:true,  cc:true,   cfg:false},
-  "AUXILIAR ADMINISTRATIVO": {sol:true,  vis:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  cmp:true,  comp:true,  rec:true,  pag:true,  cc:true,   cfg:false},
-  AUTORIZADOR:               {sol:true,  vis:true,  apr:true,  hist:true,  req:false, lreq:false, adq:false, cmp:false, comp:false, rec:false, pag:false, cc:false,  cfg:false},
-  ADMINISTRADOR:             {sol:true,  vis:true,  apr:true,  hist:true,  req:true,  lreq:true,  adq:true,  cmp:true,  comp:true,  rec:true,  pag:true,  cc:true,   cfg:true}
+  // req=Nueva Req  lreq=Modificar Req  adq=Adquisiciones  pag=Pagos  cc=Caja Chica  cfg=Config  comb=Combustible
+  SOLICITANTE:               {sol:true,  vis:true,  apr:false, hist:false, req:false, lreq:false, adq:false, cmp:false, comp:true,  rec:false, pag:false, cc:false,  cfg:false, comb:false},
+  AUXILIAR:                  {sol:true,  vis:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  cmp:true,  comp:true,  rec:true,  pag:true,  cc:true,   cfg:false, comb:true},
+  "AUXILIAR ADMINISTRATIVO": {sol:true,  vis:true,  apr:false, hist:true,  req:true,  lreq:true,  adq:true,  cmp:true,  comp:true,  rec:true,  pag:true,  cc:true,   cfg:false, comb:true},
+  AUTORIZADOR:               {sol:true,  vis:true,  apr:true,  hist:true,  req:false, lreq:false, adq:false, cmp:false, comp:false, rec:false, pag:false, cc:false,  cfg:false, comb:false},
+  "PARQUE VEHICULAR":        {sol:true,  vis:true,  apr:false, hist:false, req:false, lreq:false, adq:false, cmp:false, comp:true,  rec:false, pag:false, cc:false,  cfg:false, comb:true,  mtto:true},
+  ADMINISTRADOR:             {sol:true,  vis:true,  apr:true,  hist:true,  req:true,  lreq:true,  adq:true,  cmp:true,  comp:true,  rec:true,  pag:true,  cc:true,   cfg:true,  comb:true,  mtto:true}
 };
 
 // ============================================================
@@ -3020,11 +3097,17 @@ var NAV = [
     ]
   },
   {
+    id:"parque", icon:"🚗", label:"Parque Vehicular",
+    items:[
+      {id:"sec-mtto-bitacora", icon:"📋", label:"Bitácora Mantenimiento", perm:"mtto", bdg:""},
+    ]
+  },
+  {
     id:"combustible", icon:"⛽", label:"Combustible",
     items:[
-      {id:"sec-comb-xml",     icon:"📂", label:"Importar Factura XML", perm:"pag", bdg:""},
-      {id:"sec-comb-bitacora",icon:"📋", label:"Bitácora de Cargas",   perm:"vis", bdg:""},
-      {id:"sec-comb-hist",    icon:"📊", label:"Historial Facturas",   perm:"vis", bdg:""},
+      {id:"sec-comb-xml",     icon:"📂", label:"Importar Factura XML", perm:"comb", bdg:""},
+      {id:"sec-comb-bitacora",icon:"📋", label:"Bitácora de Cargas",   perm:"comb", bdg:""},
+      {id:"sec-comb-hist",    icon:"📊", label:"Historial Facturas",   perm:"comb", bdg:""},
     ]
   },
   {
@@ -3259,7 +3342,7 @@ function entrar(){
   // Construir sidebar
   buildSidebar();
   // Activar primera sección visible
-  var first=SE.p.sol?"sec-solicitud":SE.p.apr?"sec-aprobaciones":SE.p.hist?"sec-historial":SE.p.req?"sec-requisiciones":SE.p.comp?"sec-comp-facturas":"sec-lista-req";
+  var first=SE.p.comb&&!SE.p.sol?"sec-comb-xml":SE.p.sol?"sec-solicitud":SE.p.apr?"sec-aprobaciones":SE.p.hist?"sec-historial":SE.p.req?"sec-requisiciones":SE.p.comp?"sec-comp-facturas":"sec-lista-req";
   document.getElementById(first).classList.add("active");
   var firstNav=document.getElementById("nav-"+first);
   if(firstNav) firstNav.classList.add("active");
@@ -3380,6 +3463,7 @@ function showSec(id,el){
   if(id==="sec-pag-hist")     rPagHist();
   if(id==="sec-cc-nuevo")     rCCNuevo();
   if(id==="sec-cc-arqueo")    rArqueo();
+  if(id==="sec-mtto-bitacora") { mttoInitFiltros(); mttoRender(); }
   if(id==="sec-comb-xml")      { cxmlInitPeriodos(); }
   if(id==="sec-comb-bitacora") { cbitInitFiltros(); cbitCargarLineas(); }
   if(id==="sec-comb-hist")     { chistInitFiltros(); chistRender(); }
@@ -3396,9 +3480,40 @@ function uBadges(){
 // M1: SOLICITUD
 // ============================================================
 var TIPOS_BENEF_OBL=["APOYOS ECONOMICOS","DONACIONES A TERCEROS"];
+var TIPOS_MTTO_VEH=["MTTO DE VEHICULOS","MTTO DE VEHICULOS DE SEG PUB"];
 function onTS(){
   var t=document.getElementById("st").value;
   document.getElementById("sb-div").style.display=(TIPOS_BENEF_OBL.indexOf(t)>=0)?"block":"none";
+  var esMtto=TIPOS_MTTO_VEH.indexOf(t)>=0;
+  var svDiv=document.getElementById("sv-div");
+  var svInfo=document.getElementById("sv-info");
+  if(svDiv){
+    svDiv.style.display=esMtto?"block":"none";
+    if(esMtto) mttoInitVehOpts();
+  }
+  if(svInfo) svInfo.style.display="none";
+}
+function mttoInitVehOpts(){
+  var sel=document.getElementById("sv-veh");
+  if(!sel||sel.options.length>1) return;
+  COMB_VEHICULOS.forEach(function(v){
+    var opt=document.createElement("option");
+    opt.value=v.eco;
+    opt.textContent=v.eco+" — "+v.desc+" ("+v.placa+")";
+    sel.appendChild(opt);
+  });
+}
+function onSVVeh(){
+  var eco=parseInt(document.getElementById("sv-veh").value);
+  var v=COMB_VEHICULOS.filter(function(x){return x.eco===eco;})[0];
+  var svInfo=document.getElementById("sv-info");
+  if(v){
+    document.getElementById("sv-placa").value=v.placa;
+    document.getElementById("sv-area").value=v.area;
+    if(svInfo) svInfo.style.display="grid";
+  } else {
+    if(svInfo) svInfo.style.display="none";
+  }
 }
 
 function enviarSol(){
@@ -3418,6 +3533,14 @@ function enviarSol(){
     descripcion:d,
     beneficiario:ben,
     esCajaChica:t==="VIÁTICOS",
+    vehiculo:(function(){
+      if(TIPOS_MTTO_VEH.indexOf(t)>=0){
+        var eco=parseInt((document.getElementById("sv-veh")||{value:""}).value)||0;
+        var v=COMB_VEHICULOS.filter(function(x){return x.eco===eco;})[0];
+        return v?{eco:v.eco,desc:v.desc,placa:v.placa,area:v.area}:null;
+      }
+      return null;
+    })(),
     estado:"PENDIENTE",
     nota:"",
     autorizadoPor:"",
@@ -3441,6 +3564,9 @@ function enviarSol(){
     document.getElementById("sc").textContent="0";
     document.getElementById("sben").value="";
     document.getElementById("sb-div").style.display="none";
+    var _sv=document.getElementById("sv-div"); if(_sv) _sv.style.display="none";
+    var _si=document.getElementById("sv-info"); if(_si) _si.style.display="none";
+    var _svv=document.getElementById("sv-veh"); if(_svv) _svv.value="";
     rMis();
     uBadges();
   } else {
@@ -9145,6 +9271,267 @@ function rqAddProd(desc,cant,um,precio,aplicaIVA,tasaIEPS){
 }
 
 // ============================================================
+// MÓDULO PARQUE VEHICULAR — BITÁCORA DE MANTENIMIENTO
+// ============================================================
+
+var TIPOS_MTTO_VEH=["MTTO DE VEHICULOS","MTTO DE VEHICULOS DE SEG PUB"];
+
+function getMttoReg(){return JSON.parse(localStorage.getItem("mtto_bitacora")||"[]");}
+function setMttoReg(v){localStorage.setItem("mtto_bitacora",JSON.stringify(v));}
+
+function mttoSyncSols(){
+  // Crea/actualiza registros en bitácora desde solicitudes de MTTO con vehículo asignado
+  var sols=getSols().filter(function(s){
+    return TIPOS_MTTO_VEH.indexOf(s.tipo)>=0 && s.vehiculo;
+  });
+  var regs=getMttoReg();
+  var ids=regs.map(function(r){return r.solId;});
+  var nuevos=false;
+  sols.forEach(function(s){
+    if(ids.indexOf(s.id)<0){
+      regs.unshift({
+        id:"mtto-"+s.id,
+        solId:s.id,
+        folio:s.folio,
+        fecha:s.fecha,
+        vehiculo:s.vehiculo.desc,
+        placa:s.vehiculo.placa,
+        area:s.vehiculo.area,
+        ecoVeh:s.vehiculo.eco,
+        tipo:"CORRECTIVO",
+        desc:s.descripcion,
+        taller:"",
+        costo:0,
+        editado:false
+      });
+      nuevos=true;
+    }
+  });
+  if(nuevos) setMttoReg(regs);
+}
+
+function mttoInitFiltros(){
+  mttoSyncSols();
+  var sel=document.getElementById("mtto-fil-veh");
+  if(!sel) return;
+  var regs=getMttoReg();
+  var vehs=[...new Set(regs.map(function(r){return r.vehiculo;}))].sort();
+  sel.innerHTML="<option value=''>Todos los vehículos</option>"+
+    vehs.map(function(v){return "<option>"+v+"</option>";}).join("");
+}
+
+function mttoRender(){
+  mttoSyncSols();
+  var filVeh=(document.getElementById("mtto-fil-veh")||{value:""}).value;
+  var filTipo=(document.getElementById("mtto-fil-tipo")||{value:""}).value;
+  var filDe=(document.getElementById("mtto-fil-de")||{value:""}).value;
+  var filHasta=(document.getElementById("mtto-fil-hasta")||{value:""}).value;
+  var regs=getMttoReg().filter(function(r){
+    if(filVeh&&r.vehiculo!==filVeh) return false;
+    if(filTipo&&r.tipo!==filTipo) return false;
+    if(filDe&&r.fecha<filDe) return false;
+    if(filHasta&&r.fecha>filHasta) return false;
+    return true;
+  });
+  var tbody=document.getElementById("mtto-tbody");
+  if(!tbody) return;
+  if(!regs.length){
+    tbody.innerHTML="<tr><td colspan='10' style='text-align:center;color:var(--text3);padding:20px;'>Sin registros de mantenimiento</td></tr>";
+    return;
+  }
+  tbody.innerHTML=regs.map(function(r,i){
+    var bg=i%2?"background:#fdf2f4;":"";
+    var tipoCls=r.tipo==="PREVENTIVO"?"sa":"sp";
+    var editBadge=r.editado?"":"<span style='font-size:10px;color:#c05621;margin-left:4px;'>⚠ pendiente</span>";
+    return "<tr style='"+bg+"'>"+
+      "<td style='font-weight:700;font-size:11px;'>"+r.folio+"</td>"+
+      "<td>"+r.fecha+"</td>"+
+      "<td style='font-size:11px;'>"+r.vehiculo+"</td>"+
+      "<td>"+r.placa+"</td>"+
+      "<td style='font-size:11px;'>"+r.area+"</td>"+
+      "<td><span class='est "+tipoCls+"' style='font-size:10px;'>"+r.tipo+"</span></td>"+
+      "<td style='font-size:11px;max-width:180px;'>"+r.desc+editBadge+"</td>"+
+      "<td style='font-size:11px;'>"+r.taller+"</td>"+
+      "<td style='text-align:right;'>"+fmt(r.costo)+"</td>"+
+      "<td style='text-align:center;white-space:nowrap;'>"+
+        "<button class='btn bo btm' onclick='mttoAbrirEdit(\""+r.id+"\")'>✏️ Editar</button> "+
+        "<button class='btn bgold btm' onclick='mttoImprimirUno(\""+r.id+"\")'>🖨️</button>"+
+      "</td>"+
+    "</tr>";
+  }).join("");
+}
+
+function mttoAbrirEdit(id){
+  var regs=getMttoReg();
+  var r=regs.filter(function(x){return x.id===id;})[0];
+  if(!r) return;
+  document.getElementById("mtto-ed-solid").value=r.id;
+  document.getElementById("mtto-ed-folio").value=r.folio;
+  document.getElementById("mtto-ed-fecha").value=r.fecha;
+  document.getElementById("mtto-ed-vehiculo").value=r.vehiculo;
+  document.getElementById("mtto-ed-placa").value=r.placa;
+  document.getElementById("mtto-ed-area").value=r.area;
+  document.getElementById("mtto-ed-tipo").value=r.tipo;
+  document.getElementById("mtto-ed-desc").value=r.desc;
+  document.getElementById("mtto-ed-taller").value=r.taller;
+  document.getElementById("mtto-ed-costo").value=r.costo||"";
+  om("m-mtto-edit");
+}
+
+function mttoGuardarEdit(){
+  var id=document.getElementById("mtto-ed-solid").value;
+  var tipo=document.getElementById("mtto-ed-tipo").value;
+  var desc=document.getElementById("mtto-ed-desc").value.trim();
+  var taller=document.getElementById("mtto-ed-taller").value.trim().toUpperCase();
+  var costo=parseFloat(document.getElementById("mtto-ed-costo").value)||0;
+  var fecha=document.getElementById("mtto-ed-fecha").value;
+  if(!desc||!taller){toast("Completa descripción y taller","err");return;}
+  var regs=getMttoReg();
+  regs=regs.map(function(r){
+    if(r.id!==id) return r;
+    return Object.assign({},r,{tipo:tipo,desc:desc,taller:taller,costo:costo,fecha:fecha,editado:true});
+  });
+  setMttoReg(regs);
+  toast("Registro guardado","ok");
+  cm("m-mtto-edit");
+  mttoRender();
+}
+
+function mttoGetReg(id){
+  return getMttoReg().filter(function(r){return r.id===id;})[0];
+}
+
+function mttoHtmlDoc(r,titulo,cuerpo){
+  var logo=getLogo();
+  var folio="BIT-MTTO-"+r.folio;
+  var extras=
+    ".datos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:12px;margin-bottom:16px;}"+
+    ".dato label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;display:block;margin-bottom:2px;}"+
+    ".dato span{font-size:11px;font-weight:600;}"+
+    ".dato.full{grid-column:1/-1;}"+
+    ".desc-box{background:#f9f9f9;border:1px solid #e5e7eb;border-radius:6px;padding:12px;font-size:11px;line-height:1.6;margin-bottom:14px;}"+
+    ".tipo-badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;background:"+(r.tipo==="PREVENTIVO"?"#16a34a":"#c05621")+";margin-bottom:12px;}"+
+    ".firmas-grid.col4{grid-template-columns:repeat(4,1fr);}";
+  return "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>"+titulo+" "+folio+"</title>"+
+    "<style>"+printCSS(extras)+"</style></head><body>"+
+    "<div class='hdr'>"+
+      "<div class='hdr-logo'>"+logo+"</div>"+
+      "<div class='hdr-mid'><h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1><p>Tesorería Municipal — Ejercicio Fiscal 2026</p></div>"+
+      "<div class='hdr-folio'><div class='lbl'>Folio</div><div class='num'>"+folio+"</div></div>"+
+    "</div>"+
+    "<div class='doc-titulo-banda'><h2>"+titulo+"</h2></div>"+
+    cuerpo+
+    "<div class='firmas-pie'><div class='firmas-grid col4'>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>MELANIE AYLIN ORTIZ CARVAJAL</div><div class='cargo'>Encargada Parque Vehicular — Solicita</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>CP. ALICIA HUERVO DÍAZ</div><div class='cargo'>Tesorera Municipal — Revisa</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>LIC. ERENDIRA SALGADO CARRIÓN</div><div class='cargo'>Titular OIC — Revisa</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>ING. CHRISTIAN ROMERO PÉREZ</div><div class='cargo'>Presidente Municipal — Autoriza</div></div>"+
+    "</div>"+
+    "<div class='pie'>Generado el "+new Date().toLocaleDateString("es-MX")+" — Sistema de Egresos H. Ayuntamiento de Tlacotalpan</div>"+
+    "</div></body></html>";
+}
+
+function mttoImprimirUno(id){
+  var r=mttoGetReg(id);
+  if(!r){toast("Registro no encontrado","err");return;}
+  var cuerpo=
+    "<div class='datos'>"+
+      "<div class='dato'><label>Folio Solicitud</label><span>"+r.folio+"</span></div>"+
+      "<div class='dato'><label>Fecha</label><span>"+r.fecha+"</span></div>"+
+      "<div class='dato'><label>Taller / Proveedor</label><span>"+r.taller+"</span></div>"+
+      "<div class='dato'><label>Vehículo</label><span>"+r.vehiculo+"</span></div>"+
+      "<div class='dato'><label>Placa</label><span>"+r.placa+"</span></div>"+
+      "<div class='dato'><label>Área</label><span>"+r.area+"</span></div>"+
+    "</div>"+
+    "<div class='tipo-badge'>"+r.tipo+"</div>"+
+    "<div style='font-size:11px;font-weight:700;color:#6B0F1A;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;'>Descripción del Servicio:</div>"+
+    "<div class='desc-box'>"+r.desc+"</div>"+
+    "<table><thead><tr>"+
+      "<th>Concepto</th><th style='text-align:right;'>Costo</th>"+
+    "</tr></thead><tbody><tr>"+
+      "<td>Servicio de mantenimiento — "+r.taller+"</td>"+
+      "<td style='text-align:right;font-weight:700;'>"+fmt(r.costo)+"</td>"+
+    "</tr></tbody></table>";
+  var html=mttoHtmlDoc(r,"REGISTRO DE MANTENIMIENTO VEHICULAR",cuerpo);
+  var w=window.open("","_blank","width=900,height=750");
+  w.document.write(html);w.document.close();w.print();
+}
+
+function mttoImprimirRegistro(){
+  var id=document.getElementById("mtto-ed-solid").value;
+  mttoImprimirUno(id);
+}
+
+function mttoImprimirAcumulada(){
+  var filVeh=(document.getElementById("mtto-fil-veh")||{value:""}).value;
+  var filTipo=(document.getElementById("mtto-fil-tipo")||{value:""}).value;
+  var filDe=(document.getElementById("mtto-fil-de")||{value:""}).value;
+  var filHasta=(document.getElementById("mtto-fil-hasta")||{value:""}).value;
+  var regs=getMttoReg().filter(function(r){
+    if(filVeh&&r.vehiculo!==filVeh) return false;
+    if(filTipo&&r.tipo!==filTipo) return false;
+    if(filDe&&r.fecha<filDe) return false;
+    if(filHasta&&r.fecha>filHasta) return false;
+    return true;
+  });
+  if(!regs.length){toast("Sin registros para imprimir","err");return;}
+  var logo=getLogo();
+  var totalCosto=regs.reduce(function(s,r){return s+r.costo;},0);
+  var titulo=filVeh?"Historial: "+filVeh:"Historial General de Mantenimiento";
+  var folio="BIT-MTTO-HIST-"+new Date().getFullYear()+"-"+String(Date.now()).slice(-4);
+  var extras=
+    "table{width:100%;border-collapse:collapse;margin-bottom:12px;}"+
+    "thead th{background:#6B0F1A;color:white;padding:5px 8px;text-align:left;font-size:9px;}"+
+    "td{padding:4px 8px;border-bottom:1px solid #e5e7eb;font-size:9px;}"+
+    "tr:nth-child(even)td{background:#fdf2f4;}"+
+    ".tot-row td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
+    ".prev{color:#16a34a;font-weight:700;}.corr{color:#c05621;font-weight:700;}"+
+    ".firmas-grid.col4{grid-template-columns:repeat(4,1fr);}";
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>"+titulo+"</title>"+
+    "<style>"+printCSS(extras)+"</style></head><body>"+
+    "<div class='hdr'>"+
+      "<div class='hdr-logo'>"+logo+"</div>"+
+      "<div class='hdr-mid'><h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1><p>Tesorería Municipal — Ejercicio Fiscal 2026</p></div>"+
+      "<div class='hdr-folio'><div class='lbl'>Folio</div><div class='num'>"+folio+"</div></div>"+
+    "</div>"+
+    "<div class='doc-titulo-banda'><h2>BITÁCORA DE MANTENIMIENTO VEHICULAR</h2></div>"+
+    (filVeh?"<div style='font-size:11px;margin-bottom:12px;'><b>Vehículo:</b> "+filVeh+"</div>":"")+
+    "<table><thead><tr>"+
+      "<th>Folio</th><th>Fecha</th><th>Vehículo</th><th>Placa</th><th>Área</th>"+
+      "<th>Tipo</th><th>Descripción</th><th>Taller</th><th style='text-align:right;'>Costo</th>"+
+    "</tr></thead><tbody>"+
+    regs.map(function(r,i){
+      var tipoCls=r.tipo==="PREVENTIVO"?"prev":"corr";
+      return "<tr>"+
+        "<td style='font-weight:700;'>"+r.folio+"</td>"+
+        "<td>"+r.fecha+"</td>"+
+        "<td>"+r.vehiculo+"</td>"+
+        "<td>"+r.placa+"</td>"+
+        "<td>"+r.area+"</td>"+
+        "<td class='"+tipoCls+"'>"+r.tipo+"</td>"+
+        "<td style='max-width:160px;'>"+r.desc+"</td>"+
+        "<td>"+r.taller+"</td>"+
+        "<td style='text-align:right;'>"+fmt(r.costo)+"</td>"+
+      "</tr>";
+    }).join("")+
+    "</tbody><tfoot><tr class='tot-row'>"+
+      "<td colspan='8' style='text-align:right;'>TOTAL ("+regs.length+" servicios):</td>"+
+      "<td style='text-align:right;'>"+fmt(totalCosto)+"</td>"+
+    "</tr></tfoot></table>"+
+    "<div class='firmas-pie'><div class='firmas-grid col4'>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>MELANIE AYLIN ORTIZ CARVAJAL</div><div class='cargo'>Encargada Parque Vehicular — Solicita</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>CP. ALICIA HUERVO DÍAZ</div><div class='cargo'>Tesorera Municipal — Revisa</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>LIC. ERENDIRA SALGADO CARRIÓN</div><div class='cargo'>Titular OIC — Revisa</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>ING. CHRISTIAN ROMERO PÉREZ</div><div class='cargo'>Presidente Municipal — Autoriza</div></div>"+
+    "</div>"+
+    "<div class='pie'>Generado el "+new Date().toLocaleDateString("es-MX")+" — Sistema de Egresos H. Ayuntamiento de Tlacotalpan</div>"+
+    "</div></body></html>";
+  var w=window.open("","_blank","width=1100,height=800");
+  w.document.write(html);w.document.close();w.print();
+}
+
+
+// ============================================================
 // MÓDULO COMBUSTIBLE — Flujo: XML → OP → Bitácora
 // ============================================================
 
@@ -9394,86 +9781,94 @@ function cxmlImprimirOP(){
   cxmlPrintOP(cxmlDatosActuales,perLabel,gasolinera,fondo,programa);
 }
 
+function cxmlGenFolioOP(){
+  var y=new Date().getFullYear();
+  var facts=getCombFacts();
+  var ops=facts.filter(function(f){return f.folioOP&&f.folioOP.indexOf("OP-COMB-"+y)===0;}).length;
+  return "OP-COMB-"+y+"-"+String(ops+1).padStart(3,"0");
+}
+
 function cxmlPrintOP(f,perLabel,gasolinera,fondo,programa){
   fondo=fondo||f.fondo||"";
   programa=programa||f.programa||"";
+  var logo=getLogo();
+  var folioOP=f.folioOP||cxmlGenFolioOP();
+  // Save folioOP if not yet assigned
+  if(!f.folioOP){
+    var facts=getCombFacts();
+    facts=facts.map(function(x){return x.id===f.id?Object.assign({},x,{folioOP:folioOP}):x;});
+    setCombFacts(facts);
+  }
   var totLitros=f.lineas.reduce(function(s,l){return s+l.cantidad;},0);
+  var extras=
+    ".datos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:12px;margin-bottom:16px;}"+
+    ".dato label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;display:block;margin-bottom:2px;}"+
+    ".dato span{font-size:11px;font-weight:600;}"+
+    ".dato.full{grid-column:1/-1;}"+
+    ".monto-box{background:#fdf2f4;border:2px solid #6B0F1A;border-radius:8px;padding:16px 20px;text-align:center;margin:16px 0;}"+
+    ".monto-num{font-size:28px;font-weight:700;color:#6B0F1A;}"+
+    ".monto-lbl{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}"+
+    "table{width:100%;border-collapse:collapse;margin-bottom:12px;}"+
+    "thead th{background:#6B0F1A;color:white;padding:6px 8px;text-align:left;font-size:10px;}"+
+    "td{padding:5px 8px;border-bottom:1px solid #e5e7eb;font-size:10px;}"+
+    "tr:nth-child(even)td{background:#fdf2f4;}"+
+    ".tot-row td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
+    ".ieps-val{color:#c05621;font-weight:700;}";
   var html="<!DOCTYPE html><html><head><meta charset='UTF-8'>"+
-  "<title>Orden de Pago Combustible "+f.folio+"</title>"+
-  "<style>"+
-  "body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#1a1a1a;}"+
-  "h1{font-size:14px;margin:0;}h2{font-size:13px;margin:4px 0;}"+
-  "table{width:100%;border-collapse:collapse;margin:8px 0;}"+
-  "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
-  "td{padding:5px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
-  "tr:nth-child(even)td{background:#fdf2f4;}"+
-  ".tot td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
-  ".monto{text-align:center;border:2px solid #6B0F1A;border-radius:8px;padding:14px;margin:14px 0;}"+
-  ".monto-num{font-size:26px;font-weight:700;color:#6B0F1A;}"+
-  ".firmas{display:flex;gap:24px;margin-top:36px;}"+
-  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}"+
-  "@media print{body{margin:8px;}}"+
-  "</style></head><body>"+
-  "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:14px;'>"+
-  "<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
-  "<h2>Tesorería Municipal — Orden de Pago — Combustible</h2>"+
-  "<p style='margin:3px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
-  "<table><thead><tr><th>Folio CFDI</th><th>Fecha Factura</th><th>RFC Emisor</th><th>Gasolinera</th><th>Período</th></tr></thead>"+
-  "<tbody><tr>"+
-  "<td style='font-weight:700;'>"+f.folio+"</td>"+
-  "<td>"+f.fecha+"</td><td>"+f.rfc+"</td><td>"+gasolinera+"</td><td>"+perLabel+"</td>"+
-  "</tr></tbody></table>"+
-  "<table><thead><tr><th>Fondo</th><th>Programa Presupuestal</th></tr></thead>"+
-  "<tbody><tr><td style='font-weight:700;'>"+fondo+"</td><td>"+programa+"</td></tr></tbody></table>"+
-  "<table><thead><tr>"+
-  "<th>#</th><th>Descripción</th><th style='text-align:right;'>Litros</th><th>U.M.</th>"+
-  "<th style='text-align:right;'>Precio Unit.</th>"+
-  "<th style='text-align:right;'>IEPS</th>"+
-  "<th style='text-align:right;'>IVA</th>"+
-  "<th style='text-align:right;'>Importe</th>"+
-  "</tr></thead><tbody>"+
-  f.lineas.map(function(l,i){
-    return "<tr><td>"+(i+1)+"</td><td>"+l.desc+"</td>"+
-      "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td><td>"+l.um+"</td>"+
-      "<td style='text-align:right;'>"+fmt(l.precioUnit)+"</td>"+
-      "<td style='text-align:right;color:#c05621;'>"+fmt(l.ieps)+"</td>"+
-      "<td style='text-align:right;'>"+fmt(l.iva)+"</td>"+
-      "<td style='text-align:right;font-weight:600;'>"+fmt(l.importe)+"</td></tr>";
-  }).join("")+
-  "</tbody>"+
-  "<tfoot>"+
-  "<tr class='tot'><td colspan='2' style='text-align:right;'>SUBTOTAL ("+totLitros.toFixed(3)+" L):</td>"+
-  "<td colspan='6' style='text-align:right;'>"+fmt(f.subtotal)+"</td></tr>"+
-  "<tr><td colspan='2' style='text-align:right;'>IEPS:</td>"+
-  "<td colspan='6' style='text-align:right;color:#c05621;font-weight:700;'>"+fmt(f.ieps)+"</td></tr>"+
-  "<tr><td colspan='2' style='text-align:right;'>IVA (16%):</td>"+
-  "<td colspan='6' style='text-align:right;'>"+fmt(f.iva)+"</td></tr>"+
-  "</tfoot></table>"+
-  "<div class='monto'>"+
-  "<div style='font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;'>Total a pagar</div>"+
-  "<div class='monto-num'>"+fmt(f.total)+"</div>"+
-  "<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:4px;'>("+numLetra(f.total)+")</div>"+
-  "</div>"+
-  "<div class='firmas'>"+
-  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
-  "<div class='firma'>___________________________<br>MTRA. LOURDES MEDINA GAMBOA<br>Síndica</div>"+
-  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
-  "</div></body></html>";
+    "<title>Orden de Pago Combustible "+folioOP+"</title>"+
+    "<style>"+printCSS(extras)+"</style></head><body>"+
+    "<div class='hdr'>"+
+      "<div class='hdr-logo'>"+logo+"</div>"+
+      "<div class='hdr-mid'>"+
+        "<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+        "<p>Tesorería Municipal — Ejercicio Fiscal 2026</p>"+
+      "</div>"+
+      "<div class='hdr-folio'><div class='lbl'>Folio</div><div class='num'>"+folioOP+"</div></div>"+
+    "</div>"+
+    "<div class='doc-titulo-banda'><h2>ORDEN DE PAGO — COMBUSTIBLE</h2><span>Tesorería Municipal | H. Ayuntamiento de Tlacotalpan, Ver.</span></div>"+
+    "<div class='datos'>"+
+      "<div class='dato'><label>Folio CFDI</label><span>"+f.folio+"</span></div>"+
+      "<div class='dato'><label>Fecha Factura</label><span>"+f.fecha+"</span></div>"+
+      "<div class='dato'><label>Período</label><span>"+perLabel+"</span></div>"+
+      "<div class='dato'><label>RFC Emisor</label><span>"+f.rfc+"</span></div>"+
+      "<div class='dato full'><label>Gasolinera</label><span>"+gasolinera+"</span></div>"+
+      "<div class='dato'><label>Fondo</label><span>"+fondo+"</span></div>"+
+      "<div class='dato full'><label>Programa Presupuestal</label><span>"+programa+"</span></div>"+
+    "</div>"+
+    "<table><thead><tr>"+
+      "<th>#</th><th>Descripción</th><th style='text-align:right;'>Litros</th><th>U.M.</th>"+
+      "<th style='text-align:right;'>Precio Unit.</th>"+
+      "<th style='text-align:right;'>IEPS</th>"+
+      "<th style='text-align:right;'>IVA</th>"+
+      "<th style='text-align:right;'>Importe</th>"+
+    "</tr></thead><tbody>"+
+    f.lineas.map(function(l,i){
+      return "<tr><td>"+(i+1)+"</td><td>"+l.desc+"</td>"+
+        "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td><td>"+l.um+"</td>"+
+        "<td style='text-align:right;'>"+fmt(l.precioUnit)+"</td>"+
+        "<td style='text-align:right;' class='ieps-val'>"+fmt(l.ieps)+"</td>"+
+        "<td style='text-align:right;'>"+fmt(l.iva)+"</td>"+
+        "<td style='text-align:right;font-weight:600;'>"+fmt(l.importe)+"</td></tr>";
+    }).join("")+
+    "</tbody><tfoot>"+
+      "<tr class='tot-row'><td colspan='2' style='text-align:right;'>SUBTOTAL ("+totLitros.toFixed(3)+" L):</td><td colspan='6' style='text-align:right;'>"+fmt(f.subtotal)+"</td></tr>"+
+      "<tr><td colspan='2' style='text-align:right;'>IEPS:</td><td colspan='6' style='text-align:right;' class='ieps-val'>"+fmt(f.ieps)+"</td></tr>"+
+      "<tr><td colspan='2' style='text-align:right;'>IVA (16%):</td><td colspan='6' style='text-align:right;'>"+fmt(f.iva)+"</td></tr>"+
+    "</tfoot></table>"+
+    "<div class='monto-box'>"+
+      "<div class='monto-lbl'>Total a pagar</div>"+
+      "<div class='monto-num'>"+fmt(f.total)+"</div>"+
+      "<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:6px;'>("+numLetra(f.total)+")</div>"+
+    "</div>"+
+    "<div class='firmas-pie'><div class='firmas-grid col3'>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>CP. ALICIA HUERVO DÍAZ</div><div class='cargo'>Tesorera Municipal — Valida</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>MTRA. LOURDES MEDINA GAMBOA</div><div class='cargo'>Síndica — Visto Bueno</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>ING. CHRISTIAN ROMERO PÉREZ</div><div class='cargo'>Presidente Municipal — Autoriza</div></div>"+
+    "</div>"+
+    "<div class='pie'>Generado el "+new Date().toLocaleDateString("es-MX")+" — Sistema de Egresos H. Ayuntamiento de Tlacotalpan</div>"+
+    "</div></body></html>";
   var w=window.open("","_blank","width=1000,height=750");
   w.document.write(html);w.document.close();w.print();
-}
-
-// ── BITÁCORA ──
-
-function cbitInitFiltros(){
-  var sel=document.getElementById("cbit-fact-sel");
-  if(!sel) return;
-  var facts=getCombFacts();
-  sel.innerHTML="<option value=''>— Seleccionar factura —</option>"+
-    facts.map(function(f){
-      var badge=f.bitacoraCompleta?" ✅":" ⏳";
-      return "<option value='"+f.id+"'>"+f.folio+" | "+f.periodo_label+" | "+fmt(f.total)+badge+"</option>";
-    }).join("");
 }
 
 function cbitCargarLineas(){
@@ -9552,70 +9947,91 @@ function cbitImprimir(){
   var id=document.getElementById("cbit-fact-sel").value;
   if(!id){toast("Selecciona una factura","err");return;}
   var f=getCombFacts().filter(function(x){return x.id===id;})[0];
-  if(!f){return;}
+  if(!f) return;
+  var logo=getLogo();
+  var folioBit=f.folioBit||("BIT-COMB-"+f.folio);
+  // Save folioBit if not yet assigned
+  if(!f.folioBit){
+    var facts=getCombFacts();
+    facts=facts.map(function(x){return x.id===f.id?Object.assign({},x,{folioBit:folioBit}):x;});
+    setCombFacts(facts);
+  }
+  var extras=
+    ".datos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:10px 12px;margin-bottom:14px;}"+
+    ".dato label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;display:block;margin-bottom:2px;}"+
+    ".dato span{font-size:11px;font-weight:600;}"+
+    "table{width:100%;border-collapse:collapse;margin-bottom:10px;}"+
+    "thead th{background:#6B0F1A;color:white;padding:5px 7px;text-align:left;font-size:9px;}"+
+    "td{padding:4px 7px;border-bottom:1px solid #e5e7eb;font-size:9px;}"+
+    "tr:nth-child(even)td{background:#fdf2f4;}"+
+    ".tot-row td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
+    ".ieps-val{color:#c05621;font-weight:700;}"+
+    ".resumen{display:flex;gap:20px;padding:8px 12px;background:#fdf2f4;border-radius:6px;font-size:10px;margin-bottom:12px;}"+
+    ".firmas-grid.col4{grid-template-columns:repeat(4,1fr);}";
   var html="<!DOCTYPE html><html><head><meta charset='UTF-8'>"+
-  "<title>Bitácora Combustible "+f.folio+"</title>"+
-  "<style>"+
-  "body{font-family:Arial,sans-serif;font-size:10px;margin:15px;color:#1a1a1a;}"+
-  "h1{font-size:13px;margin:0;}h2{font-size:12px;margin:3px 0;}"+
-  "table{width:100%;border-collapse:collapse;}"+
-  "th{background:#6B0F1A;color:#fff;padding:4px 6px;text-align:left;font-size:9px;}"+
-  "td{padding:3px 6px;border-bottom:1px solid #eee;font-size:9px;}"+
-  "tr:nth-child(even)td{background:#fdf2f4;}"+
-  ".tot td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
-  ".firmas{display:flex;gap:30px;margin-top:30px;}"+
-  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:5px;font-size:9px;}"+
-  "@media print{body{margin:8px;}}"+
-  "</style></head><body>"+
-  "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:8px;margin-bottom:10px;'>"+
-  "<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
-  "<h2>Tesorería Municipal — Bitácora de Carga de Combustible</h2>"+
-  "<p style='margin:2px 0;'>Ejercicio Fiscal 2026 | Período: "+f.periodo_label+"</p></div>"+
-  "<div style='display:flex;justify-content:space-between;margin-bottom:8px;font-size:10px;'>"+
-  "<div><b>Factura:</b> "+f.folio+" | <b>Fecha:</b> "+f.fecha+"</div>"+
-  "<div><b>Gasolinera:</b> "+f.gasolinera+"</div>"+
-  "<div><b>RFC:</b> "+f.rfc+"</div></div>"+
-  "<table><thead><tr>"+
-  "<th>#</th><th>Fecha Carga</th>"+
-  "<th style='text-align:right;'>Litros</th>"+
-  "<th>Descripción</th>"+
-  "<th style='text-align:right;'>Importe</th>"+
-  "<th>Vehículo</th><th>Placa</th><th>Área</th><th>Operador</th>"+
-  "</tr></thead><tbody>"+
-  f.lineas.map(function(l,i){
-    return "<tr>"+
-      "<td style='text-align:center;'>"+(i+1)+"</td>"+
-      "<td>"+(l.fecha||"—")+"</td>"+
-      "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td>"+
-      "<td>"+l.desc+"</td>"+
-      "<td style='text-align:right;'>"+fmt(l.importe)+"</td>"+
-      "<td>"+(l.vehiculo||"—")+"</td>"+
-      "<td>"+(l.placa||"—")+"</td>"+
-      "<td>"+(l.area||"—")+"</td>"+
-      "<td>"+(l.operador||"—")+"</td>"+
-    "</tr>";
-  }).join("")+
-  "</tbody><tfoot><tr class='tot'>"+
-  "<td colspan='6' style='text-align:right;'>TOTALES:</td>"+
-  "<td style='text-align:right;'>"+f.lineas.reduce(function(s,l){return s+l.cantidad;},0).toFixed(3)+"</td>"+
-  "<td style='text-align:right;'>"+fmt(f.lineas.reduce(function(s,l){return s+l.importe;},0))+"</td>"+
-  "<td></td></tr></tfoot></table>"+
-  "<div style='margin-top:12px;font-size:10px;'>"+
-  "<b>Subtotal:</b> "+fmt(f.subtotal)+" &nbsp;|&nbsp; "+
-  "<b>IEPS:</b> <span style='color:#c05621;font-weight:700;'>"+fmt(f.ieps)+"</span> &nbsp;|&nbsp; "+
-  "<b>IVA:</b> "+fmt(f.iva)+" &nbsp;|&nbsp; "+
-  "<b>TOTAL:</b> <span style='color:#6B0F1A;font-weight:700;'>"+fmt(f.total)+"</span></div>"+
-  "<div class='firmas'>"+
-  "<div class='firma'>___________________________<br>MELANIE AYLIN ORTIZ CARVAJAL<br>Encargada Parque Vehicular<br><em>Solicita</em></div>"+
-  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal<br><em>Revisa</em></div>"+
-  "<div class='firma'>___________________________<br>LIC. ERENDIRA SALGADO CARRIÓN<br>Titular OIC<br><em>Revisa</em></div>"+
-  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal<br><em>Autoriza</em></div>"+
-  "</div></body></html>";
-  var w=window.open("","_blank","width=1100,height=750");
+    "<title>Bitácora Combustible "+folioBit+"</title>"+
+    "<style>"+printCSS(extras)+"</style></head><body>"+
+    "<div class='hdr'>"+
+      "<div class='hdr-logo'>"+logo+"</div>"+
+      "<div class='hdr-mid'>"+
+        "<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+        "<p>Tesorería Municipal — Ejercicio Fiscal 2026</p>"+
+      "</div>"+
+      "<div class='hdr-folio'><div class='lbl'>Folio</div><div class='num'>"+folioBit+"</div></div>"+
+    "</div>"+
+    "<div class='doc-titulo-banda'><h2>BITÁCORA DE CARGA DE COMBUSTIBLE</h2><span>Tesorería Municipal | H. Ayuntamiento de Tlacotalpan, Ver.</span></div>"+
+    "<div class='datos'>"+
+      "<div class='dato'><label>Factura CFDI</label><span>"+f.folio+"</span></div>"+
+      "<div class='dato'><label>Fecha Factura</label><span>"+f.fecha+"</span></div>"+
+      "<div class='dato'><label>Período</label><span>"+f.periodo_label+"</span></div>"+
+      "<div class='dato'><label>RFC</label><span>"+f.rfc+"</span></div>"+
+      "<div class='dato'><label>Gasolinera</label><span>"+f.gasolinera+"</span></div>"+
+      "<div class='dato'><label>Fondo</label><span>"+(f.fondo||"—")+"</span></div>"+
+    "</div>"+
+    "<table><thead><tr>"+
+      "<th>#</th><th>Fecha Carga</th>"+
+      "<th style='text-align:right;'>Litros</th>"+
+      "<th>Descripción</th>"+
+      "<th style='text-align:right;'>Importe</th>"+
+      "<th>Vehículo</th><th>Placa</th><th>Área</th><th>Operador</th>"+
+    "</tr></thead><tbody>"+
+    f.lineas.map(function(l,i){
+      return "<tr>"+
+        "<td style='text-align:center;font-weight:700;'>"+(i+1)+"</td>"+
+        "<td>"+(l.fecha||"—")+"</td>"+
+        "<td style='text-align:right;'>"+l.cantidad.toFixed(3)+"</td>"+
+        "<td>"+l.desc+"</td>"+
+        "<td style='text-align:right;font-weight:600;'>"+fmt(l.importe)+"</td>"+
+        "<td>"+(l.vehiculo||"—")+"</td>"+
+        "<td>"+(l.placa||"—")+"</td>"+
+        "<td>"+(l.area||"—")+"</td>"+
+        "<td>"+(l.operador||"—")+"</td>"+
+      "</tr>";
+    }).join("")+
+    "</tbody><tfoot><tr class='tot-row'>"+
+      "<td colspan='2' style='text-align:right;'>TOTALES:</td>"+
+      "<td style='text-align:right;'>"+f.lineas.reduce(function(s,l){return s+l.cantidad;},0).toFixed(3)+" L</td>"+
+      "<td></td>"+
+      "<td style='text-align:right;'>"+fmt(f.lineas.reduce(function(s,l){return s+l.importe;},0))+"</td>"+
+      "<td colspan='4'></td>"+
+    "</tr></tfoot></table>"+
+    "<div class='resumen'>"+
+      "<span><b>Subtotal:</b> "+fmt(f.subtotal)+"</span>"+
+      "<span><b>IEPS:</b> <span class='ieps-val'>"+fmt(f.ieps)+"</span></span>"+
+      "<span><b>IVA:</b> "+fmt(f.iva)+"</span>"+
+      "<span style='color:#6B0F1A;font-weight:700;'><b>TOTAL FACTURA:</b> "+fmt(f.total)+"</span>"+
+    "</div>"+
+    "<div class='firmas-pie'><div class='firmas-grid col4'>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>MELANIE AYLIN ORTIZ CARVAJAL</div><div class='cargo'>Encargada Parque Vehicular — Solicita</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>CP. ALICIA HUERVO DÍAZ</div><div class='cargo'>Tesorera Municipal — Revisa</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>LIC. ERENDIRA SALGADO CARRIÓN</div><div class='cargo'>Titular OIC — Revisa</div></div>"+
+      "<div class='firma'><div class='linea'></div><div class='nombre'>ING. CHRISTIAN ROMERO PÉREZ</div><div class='cargo'>Presidente Municipal — Autoriza</div></div>"+
+    "</div>"+
+    "<div class='pie'>Generado el "+new Date().toLocaleDateString("es-MX")+" — Sistema de Egresos H. Ayuntamiento de Tlacotalpan</div>"+
+    "</div></body></html>";
+  var w=window.open("","_blank","width=1100,height=800");
   w.document.write(html);w.document.close();w.print();
 }
-
-// ── HISTORIAL ──
 
 function chistInitFiltros(){
   cxmlInitPeriodos();
