@@ -2051,6 +2051,152 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+
+<!-- ======================================================= -->
+<!-- MÓDULO: COMBUSTIBLE                                      -->
+<!-- ======================================================= -->
+
+<!-- NUEVO VALE -->
+<div class="sec" id="sec-comb-vale">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>⛽ Nuevo Vale de Combustible</h3><p>Registra cargas de combustible por vehículo</p></div></div>
+  <div class="card">
+    <div class="fg">
+      <div class="fi"><label>Fecha del Vale *</label><input type="date" id="cv-fecha"></div>
+      <div class="fi"><label>Período *</label>
+        <select id="cv-periodo">
+          <option value="">Seleccionar período</option>
+        </select>
+      </div>
+      <div class="fi"><label>Gasolinera *</label><input type="text" id="cv-gasolinera" value="GASOLINERA" placeholder="Nombre de la gasolinera"></div>
+      <div class="fi"><label>Encargado Parque Vehicular *</label><input type="text" id="cv-encargado" placeholder="Nombre del encargado"></div>
+    </div>
+    <!-- Tabla de cargas -->
+    <div style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong style="color:var(--vino);font-size:13px;">Cargas de Combustible</strong>
+        <button class="btn bp btm" onclick="combAddFila()">+ Agregar carga</button>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>Vehículo</th>
+            <th>Área</th>
+            <th>Placa</th>
+            <th>Combustible</th>
+            <th style="width:80px;">Litros</th>
+            <th style="width:90px;">$/Litro</th>
+            <th style="width:90px;">Importe</th>
+            <th>Operador</th>
+            <th style="width:36px;"></th>
+          </tr></thead>
+          <tbody id="cv-cargas-body"></tbody>
+          <tfoot><tr>
+            <td colspan="6" style="text-align:right;font-weight:700;padding:8px 12px;font-size:13px;">TOTAL:</td>
+            <td style="font-weight:700;padding:8px 12px;font-size:13px;color:var(--vino);" id="cv-total">$0.00</td>
+            <td colspan="2"></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn bo" onclick="combLimpiarVale()">Limpiar</button>
+      <button class="btn bgold" onclick="combImprimirValePreview()">🖨️ Vista previa</button>
+      <button class="btn bp" onclick="combGuardarVale()">💾 Guardar Vale</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORIAL DE VALES -->
+<div class="sec" id="sec-comb-hist">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>⛽ Vales de Combustible</h3><p>Historial de vales registrados</p></div></div>
+  <div class="card">
+    <div class="fb">
+      <input type="text" id="cv-hist-q" placeholder="Buscar folio, gasolinera..." oninput="rCombVales()">
+      <select id="cv-hist-est" onchange="rCombVales()">
+        <option value="">Todos los estados</option>
+        <option value="ABIERTO">ABIERTO</option>
+        <option value="FACTURADO">FACTURADO</option>
+        <option value="PAGADO">PAGADO</option>
+      </select>
+      <select id="cv-hist-per" onchange="rCombVales()">
+        <option value="">Todos los períodos</option>
+      </select>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Folio</th><th>Fecha</th><th>Período</th><th>Gasolinera</th>
+        <th style="text-align:right;">Total</th><th style="text-align:center;">Estado</th>
+        <th style="text-align:center;">Acciones</th>
+      </tr></thead>
+      <tbody id="cv-hist-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- FACTURA / PAGO -->
+<div class="sec" id="sec-comb-factura">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>🧾 Factura Quincenal / Orden de Pago</h3><p>Registra la factura de la gasolinera y genera la Orden de Pago</p></div></div>
+  <div class="card">
+    <div style="margin-bottom:14px;">
+      <label style="font-weight:600;font-size:12px;color:var(--vino);">Seleccionar Vale de Combustible</label>
+      <select id="cf-vale-sel" onchange="combSelValeFactura()" style="width:100%;margin-top:6px;">
+        <option value="">-- Seleccionar vale --</option>
+      </select>
+    </div>
+    <div id="cf-info" style="display:none;">
+      <div style="background:var(--vino-bg);border:1px solid #e8cfd3;border-left:3px solid var(--vino);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:12px;" id="cf-resumen"></div>
+      <div class="fg">
+        <div class="fi"><label>Folio Factura *</label><input type="text" id="cf-folio-fact" placeholder="Folio CFDI"></div>
+        <div class="fi"><label>Fecha Factura *</label><input type="date" id="cf-fecha-fact"></div>
+        <div class="fi"><label>RFC Gasolinera</label><input type="text" id="cf-rfc" placeholder="RFC del proveedor"></div>
+        <div class="fi"><label>Subtotal</label><input type="number" id="cf-subtotal" step="0.01" oninput="combCalcFactura()"></div>
+        <div class="fi"><label>IVA (16%)</label><input type="number" id="cf-iva" step="0.01" readonly style="background:#f5f5f5;"></div>
+        <div class="fi"><label>Total Factura</label><input type="number" id="cf-total" step="0.01" oninput="combCalcFacturaTotal()"></div>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn bgold" onclick="combImprimirOP()">🖨️ Generar Orden de Pago</button>
+        <button class="btn bp" onclick="combGuardarFactura()">💾 Registrar Factura y Pago</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BITÁCORA -->
+<div class="sec" id="sec-comb-bitacora">
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>📋 Bitácora de Carga de Combustible</h3><p>Reporte por período de todas las cargas realizadas</p></div></div>
+  <div class="card">
+    <div class="fb">
+      <select id="cb-periodo" onchange="rCombBitacora()">
+        <option value="">Todos los períodos</option>
+      </select>
+      <select id="cb-vehiculo" onchange="rCombBitacora()">
+        <option value="">Todos los vehículos</option>
+      </select>
+      <select id="cb-area" onchange="rCombBitacora()">
+        <option value="">Todas las áreas</option>
+      </select>
+      <select id="cb-tipo" onchange="rCombBitacora()">
+        <option value="">Todos los combustibles</option>
+        <option>MAGNA</option><option>PREMIUM</option><option>DIÉSEL</option>
+      </select>
+      <button class="btn bp btm" onclick="combImprimirBitacora()">🖨️ Imprimir Bitácora</button>
+    </div>
+    <div style="margin:10px 0;padding:8px 14px;background:var(--vino-bg);border-radius:var(--radius-sm);font-size:12px;display:flex;gap:24px;" id="cb-totales">
+      <span>Total litros: <strong id="cb-tot-litros">0</strong></span>
+      <span>Total importe: <strong id="cb-tot-importe">$0.00</strong></span>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Vale</th><th>Vehículo</th><th>Placa</th><th>Área</th>
+        <th>Combustible</th><th style="text-align:right;">Litros</th>
+        <th style="text-align:right;">$/L</th><th style="text-align:right;">Importe</th>
+        <th>Operador</th>
+      </tr></thead>
+      <tbody id="cb-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
 </div><!-- fin #ac -->
   </div><!-- fin main-content -->
 </div><!-- fin app-layout -->
@@ -2883,6 +3029,15 @@ var NAV = [
     ]
   },
   {
+    id:"combustible", icon:"⛽", label:"Combustible",
+    items:[
+      {id:"sec-comb-vale",    icon:"📝", label:"Nuevo Vale",   perm:"cc",  bdg:""},
+      {id:"sec-comb-hist",    icon:"📂", label:"Vales",        perm:"cc",  bdg:""},
+      {id:"sec-comb-factura", icon:"🧾", label:"Factura/Pago", perm:"pag", bdg:""},
+      {id:"sec-comb-bitacora",icon:"📋", label:"Bitácora",     perm:"vis", bdg:""},
+    ]
+  },
+  {
     id:"reportes", icon:"📊", label:"Reportes",
     items:[
       {id:"sec-reportes", icon:"🔍", label:"Buscar documento", perm:"lreq", bdg:""},
@@ -3142,6 +3297,10 @@ function entrar(){
   if(SE.p.adq)  { rAdqCrear(); rAdqModificar(); rAdqVisualizar(); }
   rSolsReq();rListaReq();
   if(SE.p.cfg) rCatalogos();
+  // Inicializar módulo combustible
+  var cvf=document.getElementById("cv-fecha");
+  if(cvf) cvf.value=new Date().toISOString().slice(0,10);
+  combInitSelects();
   uBadges();
 }
 
@@ -3233,6 +3392,10 @@ function showSec(id,el){
   if(id==="sec-pag-hist")     rPagHist();
   if(id==="sec-cc-nuevo")     rCCNuevo();
   if(id==="sec-cc-arqueo")    rArqueo();
+  if(id==="sec-comb-vale")    { combInitSelects(); combLimpiarVale(); }
+  if(id==="sec-comb-hist")    { combInitSelects(); rCombVales(); }
+  if(id==="sec-comb-factura") { combInitSelects(); }
+  if(id==="sec-comb-bitacora"){ combInitSelects(); rCombBitacora(); }
 }
 
 function uBadges(){
@@ -4065,7 +4228,6 @@ function abrirComp(id){
   var progs=["2000 MATERIALES Y SUMINISTROS","3000 SERVICIOS GENERALES","4000 TRANSFERENCIAS, ASIGNACIONES, SUBSIDIOS Y OTRAS AYUDAS","5000 BIENES MUEBLES E INMUEBLES","2026 30 178 0105 REHABILITACION Y MTTO. MAYOR DE VEH. PROPIEDAD DEL H. AYUNTAMIENTO","2026 30 178 0106 REPARACION Y MTTO. DE LOS VEH. DE SEGURIDAD PUBLICA"];
   var ae=(s.archivos||[]).map(function(a){return"<div class='fch'>📄 "+a+"</div>";}).join("");
   var chkCC=(s.esCajaChica||s.tipo==="VIÁTICOS")?"checked":"";
-  var disabledCC=s.tipo==="VIÁTICOS"?"disabled":"";
   var tipoProd=s.tipoBien||"PRODUCTO";
   var tipoFact=s.tipoFactura||"CON FACTURA";
   var tipoPago=s.tipoPago||"CONTADO";
@@ -4108,7 +4270,7 @@ function abrirComp(id){
     +"<option"+(tipoPago==="CREDITO"?" selected":"")+">CREDITO</option>"
     +"</select></div>"
     +"<div class='fi full' style='flex-direction:row;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-sm);'>"
-    +"<input type='checkbox' id='c-cajachica' "+chkCC+" "+disabledCC+" onchange='toggleTipoCC()' style='width:18px;height:18px;accent-color:var(--vino);cursor:pointer;flex-shrink:0;'>"
+    +"<input type='checkbox' id='c-cajachica' "+chkCC+" onchange='toggleTipoCC()' style='width:18px;height:18px;accent-color:var(--vino);cursor:pointer;flex-shrink:0;'>"
     +"<div><label for='c-cajachica' style='cursor:pointer;font-weight:700;color:var(--vino);font-size:13px;text-transform:none;letter-spacing:0;'>Gasto de Caja Chica</label>"
     +"<div style='font-size:11px;color:var(--text3);margin-top:2px;'>Activa si el gasto se paga con fondo de caja chica (va directo a Entrega, sin Requisición)</div>"
     +"</div></div>"
@@ -8992,6 +9154,560 @@ function rqAddProd(desc,cant,um,precio,aplicaIVA,tasaIEPS){
   document.getElementById("rq-prod-body").appendChild(tr);
   rqCalcFila(rid);
 }
+
+// ============================================================
+// MÓDULO COMBUSTIBLE
+// ============================================================
+
+var COMB_VEHICULOS = [
+  {eco:1,  area:"ALUMBRADO",        placa:"XV38147",  desc:"FORD F150 PICK UP",              marca:"FORD",         anio:"2008", color:"BLANCO", serie:"3FTGF172X8MA30366",  accion:"0105"},
+  {eco:2,  area:"AYUDANTIA",        placa:"XT98961",  desc:"CHEVROLET SILVERADO 3500",        marca:"CHEVROLET",    anio:"2006", color:"BLANCO", serie:"3GBKC34G66M115835",  accion:"0105"},
+  {eco:28, area:"DEPORTE",          placa:"N/A",       desc:"JOHN DEERE TRACTOR PODADOR",      marca:"JOHN DEERE",   anio:"N/A",  color:"VERDE",  serie:"",                   accion:"0105"},
+  {eco:3,  area:"DIF",              placa:"59TCK",    desc:"CHRYSLER RAM PROMASTER",          marca:"CHRYSLER",     anio:"2017", color:"BLANCO", serie:"3C6TRVCG6HE516558",  accion:"0105"},
+  {eco:4,  area:"DIF",              placa:"XYU522C",  desc:"NISSAN X-TRAIL",                  marca:"NISSAN",       anio:"2025", color:"GRIS",   serie:"",                   accion:"0105"},
+  {eco:5,  area:"DIF",              placa:"72TCF",    desc:"VAN EXPRESS CHEVROLET GM",         marca:"CHEVROLET",    anio:"2014", color:"BLANCO", serie:"1GAZG9FG9E1159394",  accion:"0105"},
+  {eco:6,  area:"LIMPIA PUBLICA",   placa:"YD0227A",  desc:"CAMION COMPACTADOR INTERNATIONAL 4300-210", marca:"INTERNATIONAL",anio:"2018",color:"BLANCO",serie:"3HAMMAAR6JL225063",accion:"0105"},
+  {eco:7,  area:"LIMPIA PUBLICA",   placa:"XV3575A",  desc:"CHEVROLET 3500 COMPACTADOR CHICO",marca:"CHEVROLET",    anio:"2016", color:"GRIS",   serie:"",                   accion:"0105"},
+  {eco:8,  area:"LIMPIA PUBLICA",   placa:"XY01663",  desc:"NISSAN NP300 ESTACAS",            marca:"NISSAN",       anio:"2018", color:"BLANCO", serie:"3N6AD35C8JK868803",  accion:"0105"},
+  {eco:9,  area:"OBRAS PUBLICAS",   placa:"XS2414B",  desc:"NISSAN NP 300",                   marca:"NISSAN",       anio:"2020", color:"BLANCO", serie:"3N6AD33A7LK849258",  accion:"0105"},
+  {eco:10, area:"PRESIDENCIA",      placa:"XX6157A",  desc:"CHEVROLET CHEYENNE",              marca:"CHEVROLET",    anio:"2021", color:"GRIS",   serie:"",                   accion:"0105"},
+  {eco:11, area:"PRESIDENCIA",      placa:"YM1885A",  desc:"FORD RANGER",                     marca:"FORD",         anio:"2022", color:"BLANCO", serie:"84F6R5DV9N6279867",  accion:"0105"},
+  {eco:12, area:"PRESIDENCIA",      placa:"99F953",   desc:"MAZDA HIBRIDO",                   marca:"MAZDA",        anio:"2024", color:"GRIS",   serie:"",                   accion:"0105"},
+  {eco:13, area:"PROTECCION CIVIL", placa:"XX0847A",  desc:"CHEVROLET SILVERADO DOB CAB",     marca:"CHEVROLET",    anio:"2020", color:"BLANCO", serie:"3GCPY9EH3LG212515",  accion:"0106"},
+  {eco:14, area:"PROTECCION CIVIL", placa:"AM955XX",  desc:"FORD ECONOLINE",                  marca:"FORD",         anio:"2006", color:"BLANCO", serie:"1FTRE14W66HA72179",  accion:"0106"},
+  {eco:15, area:"PROTECCION CIVIL", placa:"92YMT6",   desc:"HONDA CUATRIMOTO TRX",            marca:"HONDA",        anio:"2014", color:"ROJA",   serie:"",                   accion:"0106"},
+  {eco:16, area:"PROTECCION CIVIL", placa:"PC003",    desc:"LANCHA 1021147",                  marca:"SIN ESPECIFICAR",anio:"N/A",color:"BLANCO", serie:"",                   accion:"0106"},
+  {eco:17, area:"PROTECCION CIVIL", placa:"27YMU5",   desc:"RUNGA MOTOCARRO 320",             marca:"RUNGA",        anio:"2023", color:"NEGRO",  serie:"",                   accion:"0106"},
+  {eco:18, area:"PROTECCION CIVIL", placa:"71YSG6",   desc:"RYDER RUNGA MOTOCARRO",           marca:"RUNGA",        anio:"2024", color:"NEGRO",  serie:"",                   accion:"0106"},
+  {eco:19, area:"SECRETARIA",       placa:"YUM784B",  desc:"CHEVROLET AVEO",                  marca:"CHEVROLET",    anio:"2020", color:"BLANCO", serie:"LSGHD52H0LD076472",  accion:"0105"},
+  {eco:20, area:"SECRETARIA",       placa:"YAT898A",  desc:"NISSAN URVAN",                    marca:"NISSAN",       anio:"2007", color:"BLANCO", serie:"JN1FE56S67X572051",  accion:"0105"},
+  {eco:21, area:"SEGURIDAD PUBLICA",placa:"VE37H",    desc:"MOTOPATRULLA HONDA XR 150",       marca:"HONDA",        anio:"2023", color:"AZUL",   serie:"3H1KD1349PD813048",  accion:"0106"},
+  {eco:22, area:"SEGURIDAD PUBLICA",placa:"VE38H",    desc:"MOTOPATRULLA HONDA XR 150",       marca:"HONDA",        anio:"2023", color:"AZUL",   serie:"3H1KD1347PD813047",  accion:"0106"},
+  {eco:23, area:"SEGURIDAD PUBLICA",placa:"VE39H",    desc:"MOTOPATRULLA HONDA XR 150",       marca:"HONDA",        anio:"2023", color:"AZUL",   serie:"3H1KD1343PD813045",  accion:"0106"},
+  {eco:24, area:"SEGURIDAD PUBLICA",placa:"VE40H",    desc:"MOTOPATRULLA HONDA XR 150",       marca:"HONDA",        anio:"2023", color:"AZUL",   serie:"3H1KD1345PD813046",  accion:"0106"},
+  {eco:25, area:"SEGURIDAD PUBLICA",placa:"VE41H",    desc:"MOTOPATRULLA HONDA XR 150",       marca:"HONDA",        anio:"2023", color:"AZUL",   serie:"3H1KD134XPD814791",  accion:"0106"},
+  {eco:26, area:"SEGURIDAD PUBLICA",placa:"VE42H",    desc:"MOTOPATRULLA HONDA XR 150",       marca:"HONDA",        anio:"2023", color:"AZUL",   serie:"3H1KD1342PD814445",  accion:"0106"},
+  {eco:27, area:"SEGURIDAD PUBLICA",placa:"XX24265",  desc:"PATRULLA NISSAN NP300",           marca:"NISSAN",       anio:"2016", color:"AZUL",   serie:"3N6AD31C0GK893418",  accion:"0106"},
+  {eco:29, area:"SEGURIDAD PUBLICA",placa:"",          desc:"PICK UP FRISON T8",               marca:"JAC",          anio:"2026", color:"AZUL",   serie:"3GALD1546TM001067",  accion:"0106"},
+];
+
+var combFilaCtr=0;
+
+function getCombVales(){return JSON.parse(localStorage.getItem("comb_vales")||"[]");}
+function setCombVales(v){localStorage.setItem("comb_vales",JSON.stringify(v));}
+
+function combGenFolio(){
+  var d=new Date();
+  var y=d.getFullYear();
+  var vales=getCombVales().filter(function(v){return v.folio&&v.folio.indexOf("COMB-"+y)===0;});
+  var n=vales.length+1;
+  return "COMB-"+y+"-"+String(n).padStart(3,"0");
+}
+
+function combGenPeriodos(){
+  var meses=["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  var y=new Date().getFullYear();
+  var opts="";
+  meses.forEach(function(m,i){
+    opts+="<option value='"+y+"-"+(i+1)+"-1'>"+m+" "+y+" (1ª quincena)</option>";
+    opts+="<option value='"+y+"-"+(i+1)+"-2'>"+m+" "+y+" (2ª quincena)</option>";
+  });
+  return opts;
+}
+
+function combInitSelects(){
+  var p=combGenPeriodos();
+  ["cv-periodo","cv-hist-per","cb-periodo","cf-vale-sel"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    if(id==="cv-periodo"||id==="cv-hist-per"||id==="cb-periodo"){
+      el.innerHTML=(id==="cv-periodo"?"<option value=''>Seleccionar período</option>":"<option value=''>Todos los períodos</option>")+p;
+    }
+  });
+  // Vehículos en bitácora filtro
+  var sv=document.getElementById("cb-vehiculo");
+  if(sv){
+    sv.innerHTML="<option value=''>Todos los vehículos</option>";
+    COMB_VEHICULOS.forEach(function(v){
+      sv.innerHTML+="<option value='"+v.eco+"'>"+v.eco+" - "+v.desc+"</option>";
+    });
+  }
+  // Areas en bitácora filtro
+  var sa=document.getElementById("cb-area");
+  if(sa){
+    var areas=[...new Set(COMB_VEHICULOS.map(function(v){return v.area;}))].sort();
+    sa.innerHTML="<option value=''>Todas las áreas</option>";
+    areas.forEach(function(a){sa.innerHTML+="<option>"+a+"</option>";});
+  }
+  // Vales en factura
+  var sfv=document.getElementById("cf-vale-sel");
+  if(sfv){
+    sfv.innerHTML="<option value=''>-- Seleccionar vale --</option>";
+    getCombVales().filter(function(v){return v.estado==="ABIERTO";}).forEach(function(v){
+      sfv.innerHTML+="<option value='"+v.id+"'>"+v.folio+" — "+v.periodo_label+" — "+v.gasolinera+" — "+fmt(v.total)+"</option>";
+    });
+  }
+}
+
+function combVehOpts(){
+  return "<option value=''>Seleccionar vehículo</option>"+
+    COMB_VEHICULOS.map(function(v){
+      return "<option value='"+v.eco+"'>"+v.eco+" - "+v.desc+" ("+v.placa+")</option>";
+    }).join("");
+}
+
+function combAddFila(){
+  combFilaCtr++;
+  var id="cf"+combFilaCtr;
+  var tr=document.createElement("tr");
+  tr.id=id;
+  tr.innerHTML=
+    "<td><select onchange=\"combAutoFila('"+id+"')\">"+combVehOpts()+"</select></td>"+
+    "<td><input type='text' id='"+id+"-area' readonly style='background:#f5f5f5;min-width:110px;'></td>"+
+    "<td><input type='text' id='"+id+"-placa' readonly style='background:#f5f5f5;width:80px;'></td>"+
+    "<td><select id='"+id+"-tipo'><option>MAGNA</option><option>PREMIUM</option><option>DIÉSEL</option></select></td>"+
+    "<td><input type='number' id='"+id+"-litros' min='0' step='0.01' value='0' oninput=\"combCalcFila('"+id+"')\" style='width:70px;'></td>"+
+    "<td><input type='number' id='"+id+"-precio' min='0' step='0.01' value='0' oninput=\"combCalcFila('"+id+"')\" style='width:80px;'></td>"+
+    "<td><input type='number' id='"+id+"-importe' readonly value='0.00' style='background:#f5f5f5;width:80px;'></td>"+
+    "<td><input type='text' id='"+id+"-operador' placeholder='Operador' style='min-width:120px;'></td>"+
+    "<td><button class='btn bd btm' style='padding:3px 8px;' onclick=\"combDelFila('"+id+"')\">&#x2715;</button></td>";
+  document.getElementById("cv-cargas-body").appendChild(tr);
+}
+
+function combAutoFila(id){
+  var tr=document.getElementById(id);
+  var sel=tr.querySelector("select");
+  var eco=parseInt(sel.value);
+  var v=COMB_VEHICULOS.filter(function(x){return x.eco===eco;})[0];
+  document.getElementById(id+"-area").value=v?v.area:"";
+  document.getElementById(id+"-placa").value=v?v.placa:"";
+}
+
+function combCalcFila(id){
+  var l=parseFloat(document.getElementById(id+"-litros").value)||0;
+  var p=parseFloat(document.getElementById(id+"-precio").value)||0;
+  document.getElementById(id+"-importe").value=(l*p).toFixed(2);
+  combCalcTotal();
+}
+
+function combDelFila(id){
+  var el=document.getElementById(id);
+  if(el) el.parentNode.removeChild(el);
+  combCalcTotal();
+}
+
+function combCalcTotal(){
+  var rows=document.querySelectorAll("#cv-cargas-body tr");
+  var total=0;
+  rows.forEach(function(tr){
+    var imp=tr.querySelector("input[id$='-importe']");
+    if(imp) total+=parseFloat(imp.value)||0;
+  });
+  document.getElementById("cv-total").textContent=fmt(total);
+}
+
+function combGetFilas(){
+  var rows=document.querySelectorAll("#cv-cargas-body tr");
+  var cargas=[];
+  rows.forEach(function(tr){
+    var sel=tr.querySelector("select");
+    var eco=parseInt(sel?sel.value:0);
+    var v=COMB_VEHICULOS.filter(function(x){return x.eco===eco;})[0];
+    if(!v) return;
+    cargas.push({
+      eco:v.eco, vehiculo:v.desc, placa:v.placa, area:v.area, serie:v.serie,
+      tipo:document.getElementById(tr.id+"-tipo").value,
+      litros:parseFloat(document.getElementById(tr.id+"-litros").value)||0,
+      precio:parseFloat(document.getElementById(tr.id+"-precio").value)||0,
+      importe:parseFloat(document.getElementById(tr.id+"-importe").value)||0,
+      operador:document.getElementById(tr.id+"-operador").value.trim().toUpperCase()
+    });
+  });
+  return cargas;
+}
+
+function combGuardarVale(){
+  var fecha=document.getElementById("cv-fecha").value;
+  var per=document.getElementById("cv-periodo");
+  var gasolinera=document.getElementById("cv-gasolinera").value.trim().toUpperCase();
+  var encargado=document.getElementById("cv-encargado").value.trim().toUpperCase();
+  if(!fecha||!per.value||!gasolinera||!encargado){toast("Completa todos los campos obligatorios","err");return;}
+  var cargas=combGetFilas();
+  if(!cargas.length){toast("Agrega al menos una carga","err");return;}
+  var total=cargas.reduce(function(s,c){return s+c.importe;},0);
+  var vale={
+    id:String(Date.now()),
+    folio:combGenFolio(),
+    fecha:fecha,
+    periodo:per.value,
+    periodo_label:per.options[per.selectedIndex].text,
+    gasolinera:gasolinera,
+    encargado:encargado,
+    cargas:cargas,
+    total:total,
+    estado:"ABIERTO",
+    factura:null,
+    fechaRegistro:new Date().toISOString()
+  };
+  var vales=getCombVales();
+  vales.unshift(vale);
+  setCombVales(vales);
+  toast("Vale guardado: "+vale.folio,"ok");
+  combLimpiarVale();
+  rCombVales();
+}
+
+function combLimpiarVale(){
+  document.getElementById("cv-fecha").value=new Date().toISOString().slice(0,10);
+  document.getElementById("cv-periodo").value="";
+  document.getElementById("cv-gasolinera").value="GASOLINERA";
+  document.getElementById("cv-encargado").value="";
+  document.getElementById("cv-cargas-body").innerHTML="";
+  document.getElementById("cv-total").textContent="$0.00";
+}
+
+function rCombVales(){
+  var q=(document.getElementById("cv-hist-q")||{value:""}).value.toLowerCase();
+  var est=(document.getElementById("cv-hist-est")||{value:""}).value;
+  var per=(document.getElementById("cv-hist-per")||{value:""}).value;
+  var vales=getCombVales().filter(function(v){
+    if(est&&v.estado!==est) return false;
+    if(per&&v.periodo!==per) return false;
+    if(q&&!(v.folio+v.gasolinera+v.encargado).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  var tb=document.getElementById("cv-hist-tbody");
+  if(!tb) return;
+  if(!vales.length){tb.innerHTML="<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:20px;'>Sin vales</td></tr>";return;}
+  tb.innerHTML=vales.map(function(v){
+    var cls=v.estado==="PAGADO"?"sa":v.estado==="FACTURADO"?"sz":"sp";
+    return "<tr>"+
+      "<td style='font-weight:600;'>"+v.folio+"</td>"+
+      "<td>"+v.fecha+"</td>"+
+      "<td style='font-size:11px;'>"+v.periodo_label+"</td>"+
+      "<td>"+v.gasolinera+"</td>"+
+      "<td style='text-align:right;font-weight:600;'>"+fmt(v.total)+"</td>"+
+      "<td style='text-align:center;'><span class='est "+cls+"'>"+v.estado+"</span></td>"+
+      "<td style='text-align:center;white-space:nowrap;'>"+
+        "<button class='btn bo btm' onclick='combVerVale(\""+v.id+"\")'>Ver</button> "+
+        "<button class='btn bp btm' onclick='combImprimirVale(\""+v.id+"\")'>🖨️</button>"+
+      "</td>"+
+    "</tr>";
+  }).join("");
+}
+
+function combVerVale(id){
+  var v=getCombVales().filter(function(x){return x.id===id;})[0];
+  if(!v) return;
+  var html="<b>Folio:</b> "+v.folio+" | <b>Período:</b> "+v.periodo_label+" | <b>Estado:</b> "+v.estado+"<br>"+
+    "<b>Gasolinera:</b> "+v.gasolinera+" | <b>Encargado:</b> "+v.encargado+"<br><br>"+
+    "<table style='width:100%;border-collapse:collapse;font-size:12px;'>"+
+    "<thead><tr style='background:var(--vino);color:#fff;'>"+
+    "<th style='padding:6px;'>Vehículo</th><th>Área</th><th>Placa</th><th>Combustible</th><th>Litros</th><th>$/L</th><th>Importe</th><th>Operador</th></tr></thead>"+
+    "<tbody>"+v.cargas.map(function(c,i){
+      return "<tr style='background:"+(i%2?"#fdf2f4":"#fff")+";'>"+
+        "<td style='padding:5px 8px;'>"+c.vehiculo+"</td>"+
+        "<td style='padding:5px 8px;'>"+c.area+"</td>"+
+        "<td style='padding:5px 8px;'>"+c.placa+"</td>"+
+        "<td style='padding:5px 8px;'>"+c.tipo+"</td>"+
+        "<td style='padding:5px 8px;text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
+        "<td style='padding:5px 8px;text-align:right;'>"+fmt(c.precio)+"</td>"+
+        "<td style='padding:5px 8px;text-align:right;font-weight:600;'>"+fmt(c.importe)+"</td>"+
+        "<td style='padding:5px 8px;'>"+c.operador+"</td>"+
+      "</tr>";
+    }).join("")+
+    "</tbody><tfoot><tr><td colspan='6' style='text-align:right;font-weight:700;padding:6px 8px;'>TOTAL:</td>"+
+    "<td style='text-align:right;font-weight:700;padding:6px 8px;color:var(--vino);'>"+fmt(v.total)+"</td><td></td></tr></tfoot></table>";
+  document.getElementById("pag-ver-body").innerHTML=html;
+  document.getElementById("pag-ver-imprimir").onclick=function(){combImprimirVale(id);};
+  om("m-pag-ver");
+}
+
+function combSelValeFactura(){
+  var id=document.getElementById("cf-vale-sel").value;
+  var info=document.getElementById("cf-info");
+  if(!id){info.style.display="none";return;}
+  var v=getCombVales().filter(function(x){return x.id===id;})[0];
+  if(!v){info.style.display="none";return;}
+  document.getElementById("cf-resumen").innerHTML=
+    "<b>"+v.folio+"</b> | "+v.periodo_label+" | "+v.gasolinera+
+    " | <b>"+v.cargas.length+" cargas</b> | Total: <b>"+fmt(v.total)+"</b>";
+  document.getElementById("cf-total").value=v.total.toFixed(2);
+  document.getElementById("cf-subtotal").value=(v.total/1.16).toFixed(2);
+  document.getElementById("cf-iva").value=(v.total-v.total/1.16).toFixed(2);
+  document.getElementById("cf-fecha-fact").value=new Date().toISOString().slice(0,10);
+  info.style.display="block";
+}
+
+function combCalcFactura(){
+  var sub=parseFloat(document.getElementById("cf-subtotal").value)||0;
+  var iva=sub*0.16;
+  document.getElementById("cf-iva").value=iva.toFixed(2);
+  document.getElementById("cf-total").value=(sub+iva).toFixed(2);
+}
+
+function combCalcFacturaTotal(){
+  var tot=parseFloat(document.getElementById("cf-total").value)||0;
+  var sub=tot/1.16;
+  document.getElementById("cf-subtotal").value=sub.toFixed(2);
+  document.getElementById("cf-iva").value=(tot-sub).toFixed(2);
+}
+
+function combGuardarFactura(){
+  var id=document.getElementById("cf-vale-sel").value;
+  if(!id){toast("Selecciona un vale","err");return;}
+  var folio=document.getElementById("cf-folio-fact").value.trim();
+  var fecha=document.getElementById("cf-fecha-fact").value;
+  var rfc=document.getElementById("cf-rfc").value.trim().toUpperCase();
+  var subtotal=parseFloat(document.getElementById("cf-subtotal").value)||0;
+  var iva=parseFloat(document.getElementById("cf-iva").value)||0;
+  var total=parseFloat(document.getElementById("cf-total").value)||0;
+  if(!folio||!fecha){toast("Ingresa folio y fecha de factura","err");return;}
+  var vales=getCombVales();
+  vales=vales.map(function(v){
+    if(v.id!==id) return v;
+    v.factura={folio:folio,fecha:fecha,rfc:rfc,subtotal:subtotal,iva:iva,total:total};
+    v.estado="PAGADO";
+    return v;
+  });
+  setCombVales(vales);
+  toast("Factura registrada y vale marcado como PAGADO","ok");
+  combInitSelects();
+  rCombVales();
+  rCombBitacora();
+  document.getElementById("cf-info").style.display="none";
+  document.getElementById("cf-vale-sel").value="";
+}
+
+function rCombBitacora(){
+  var per=(document.getElementById("cb-periodo")||{value:""}).value;
+  var eco=(document.getElementById("cb-vehiculo")||{value:""}).value;
+  var area=(document.getElementById("cb-area")||{value:""}).value;
+  var tipo=(document.getElementById("cb-tipo")||{value:""}).value;
+  var vales=getCombVales();
+  var filas=[];
+  vales.forEach(function(v){
+    if(per&&v.periodo!==per) return;
+    v.cargas.forEach(function(c){
+      if(eco&&String(c.eco)!==eco) return;
+      if(area&&c.area!==area) return;
+      if(tipo&&c.tipo!==tipo) return;
+      filas.push({vale:v.folio,fecha:v.fecha,periodo:v.periodo_label,carga:c});
+    });
+  });
+  var tb=document.getElementById("cb-tbody");
+  if(!tb) return;
+  var totL=0,totI=0;
+  if(!filas.length){
+    tb.innerHTML="<tr><td colspan='10' style='text-align:center;color:var(--text3);padding:20px;'>Sin registros</td></tr>";
+  } else {
+    tb.innerHTML=filas.map(function(f,i){
+      totL+=f.carga.litros; totI+=f.carga.importe;
+      return "<tr style='background:"+(i%2?"#fdf2f4":"#fff")+";'>"+
+        "<td>"+f.fecha+"</td>"+
+        "<td style='font-size:11px;font-weight:600;'>"+f.vale+"</td>"+
+        "<td style='font-size:11px;'>"+f.carga.vehiculo+"</td>"+
+        "<td>"+f.carga.placa+"</td>"+
+        "<td style='font-size:11px;'>"+f.carga.area+"</td>"+
+        "<td><span style='font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:"+(f.carga.tipo==="MAGNA"?"#e8f5e9":f.carga.tipo==="PREMIUM"?"#fce4ec":"#e3f2fd")+";'>"+f.carga.tipo+"</span></td>"+
+        "<td style='text-align:right;'>"+f.carga.litros.toFixed(2)+"</td>"+
+        "<td style='text-align:right;'>"+fmt(f.carga.precio)+"</td>"+
+        "<td style='text-align:right;font-weight:600;'>"+fmt(f.carga.importe)+"</td>"+
+        "<td style='font-size:11px;'>"+f.carga.operador+"</td>"+
+      "</tr>";
+    }).join("");
+  }
+  document.getElementById("cb-tot-litros").textContent=totL.toFixed(2)+" L";
+  document.getElementById("cb-tot-importe").textContent=fmt(totI);
+}
+
+function combImprimirVale(id){
+  var v=getCombVales().filter(function(x){return x.id===id;})[0];
+  if(!v) return;
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Vale Combustible "+v.folio+"</title>"+
+  "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#1a1a1a;}"+
+  "h1{font-size:14px;margin:0;}h2{font-size:13px;margin:4px 0;}"+
+  ".hdr{text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:12px;}"+
+  ".info{display:flex;gap:20px;margin-bottom:12px;flex-wrap:wrap;}"+
+  ".info div{flex:1;min-width:160px;}.info label{font-weight:700;font-size:10px;color:#6B0F1A;display:block;}"+
+  "table{width:100%;border-collapse:collapse;margin-top:8px;}"+
+  "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
+  "td{padding:4px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
+  "tr:nth-child(even)td{background:#fdf2f4;}"+
+  ".total-row td{font-weight:700;background:#f5f5f5;border-top:2px solid #6B0F1A;}"+
+  ".firmas{display:flex;gap:30px;margin-top:30px;}"+
+  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}"+
+  "@media print{body{margin:10px;}}</style></head><body>"+
+  "<div class='hdr'><h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+  "<h2>Tesorería Municipal — Vale de Combustible</h2>"+
+  "<p style='margin:4px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
+  "<div style='display:flex;justify-content:space-between;margin-bottom:10px;'>"+
+  "<div><b>GASOLINERA:</b> "+v.gasolinera+"<br><b>ENCARGADO:</b> "+v.encargado+"</div>"+
+  "<div style='text-align:right;'><b>FOLIO:</b> "+v.folio+"<br><b>FECHA:</b> "+v.fecha+"<br><b>PERÍODO:</b> "+v.periodo_label+"</div></div>"+
+  "<table><thead><tr><th>#</th><th>Vehículo</th><th>Área</th><th>Placa</th><th>Combustible</th><th>Litros</th><th>$/Litro</th><th>Importe</th><th>Operador</th></tr></thead>"+
+  "<tbody>"+v.cargas.map(function(c,i){
+    return "<tr><td>"+(i+1)+"</td><td>"+c.vehiculo+"</td><td>"+c.area+"</td><td>"+c.placa+"</td><td>"+c.tipo+"</td>"+
+      "<td style='text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.precio)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.importe)+"</td>"+
+      "<td>"+c.operador+"</td></tr>";
+  }).join("")+
+  "</tbody><tfoot><tr class='total-row'><td colspan='7' style='text-align:right;'>TOTAL:</td>"+
+  "<td style='text-align:right;'>"+fmt(v.total)+"</td><td></td></tr></tfoot></table>"+
+  "<div class='firmas'>"+
+  "<div class='firma'>___________________________<br>"+v.encargado+"<br>Encargado Parque Vehicular</div>"+
+  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
+  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
+  "</div></body></html>";
+  var w=window.open("","_blank","width=900,height=700");
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function combImprimirValePreview(){
+  var cargas=combGetFilas();
+  if(!cargas.length){toast("Agrega al menos una carga","err");return;}
+  var total=cargas.reduce(function(s,c){return s+c.importe;},0);
+  var v={
+    folio:"BORRADOR",
+    fecha:document.getElementById("cv-fecha").value,
+    periodo_label:document.getElementById("cv-periodo").options[document.getElementById("cv-periodo").selectedIndex]&&
+      document.getElementById("cv-periodo").options[document.getElementById("cv-periodo").selectedIndex].text||"",
+    gasolinera:document.getElementById("cv-gasolinera").value.trim().toUpperCase(),
+    encargado:document.getElementById("cv-encargado").value.trim().toUpperCase(),
+    cargas:cargas,
+    total:total
+  };
+  combImprimirVale(null);
+  // Re-use print function with temp object
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Vale Combustible BORRADOR</title>"+
+  "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;}"+
+  "table{width:100%;border-collapse:collapse;}"+
+  "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
+  "td{padding:4px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
+  ".total-row td{font-weight:700;background:#f5f5f5;border-top:2px solid #6B0F1A;}"+
+  ".firmas{display:flex;gap:30px;margin-top:30px;}"+
+  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}</style></head><body>"+
+  "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:12px;'>"+
+  "<h1 style='font-size:14px;margin:0;'>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+  "<h2 style='font-size:13px;margin:4px 0;'>Tesorería Municipal — Vale de Combustible</h2>"+
+  "<p style='margin:4px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
+  "<div style='display:flex;justify-content:space-between;margin-bottom:10px;'>"+
+  "<div><b>GASOLINERA:</b> "+v.gasolinera+"<br><b>ENCARGADO:</b> "+v.encargado+"</div>"+
+  "<div style='text-align:right;'><b>FOLIO:</b> BORRADOR<br><b>FECHA:</b> "+v.fecha+"<br><b>PERÍODO:</b> "+v.periodo_label+"</div></div>"+
+  "<table><thead><tr><th>#</th><th>Vehículo</th><th>Área</th><th>Placa</th><th>Combustible</th><th>Litros</th><th>$/Litro</th><th>Importe</th><th>Operador</th></tr></thead>"+
+  "<tbody>"+v.cargas.map(function(c,i){
+    return "<tr><td>"+(i+1)+"</td><td>"+c.vehiculo+"</td><td>"+c.area+"</td><td>"+c.placa+"</td><td>"+c.tipo+"</td>"+
+      "<td style='text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.precio)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.importe)+"</td>"+
+      "<td>"+c.operador+"</td></tr>";
+  }).join("")+
+  "</tbody><tfoot><tr class='total-row'><td colspan='7' style='text-align:right;'>TOTAL:</td>"+
+  "<td style='text-align:right;'>"+fmt(v.total)+"</td><td></td></tr></tfoot></table>"+
+  "<div class='firmas'>"+
+  "<div class='firma'>___________________________<br>"+v.encargado+"<br>Encargado Parque Vehicular</div>"+
+  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
+  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
+  "</div></body></html>";
+  var w=window.open("","_blank","width=900,height=700");
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function combImprimirOP(){
+  var id=document.getElementById("cf-vale-sel").value;
+  if(!id){toast("Selecciona un vale","err");return;}
+  var v=getCombVales().filter(function(x){return x.id===id;})[0];
+  if(!v) return;
+  var folio=document.getElementById("cf-folio-fact").value.trim();
+  var fecha=document.getElementById("cf-fecha-fact").value;
+  var rfc=document.getElementById("cf-rfc").value.trim().toUpperCase();
+  var subtotal=parseFloat(document.getElementById("cf-subtotal").value)||0;
+  var iva=parseFloat(document.getElementById("cf-iva").value)||0;
+  var total=parseFloat(document.getElementById("cf-total").value)||0;
+  if(!folio||!fecha){toast("Ingresa folio y fecha de factura primero","err");return;}
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Orden de Pago Combustible</title>"+
+  "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;}"+
+  "table{width:100%;border-collapse:collapse;margin:8px 0;}"+
+  "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
+  "td{padding:5px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
+  ".firmas{display:flex;gap:30px;margin-top:40px;}"+
+  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}</style></head><body>"+
+  "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:14px;'>"+
+  "<h1 style='font-size:14px;margin:0;'>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+  "<h2 style='font-size:13px;margin:4px 0;'>Tesorería Municipal — Orden de Pago — Combustible</h2>"+
+  "<p style='margin:4px 0;'>Ejercicio Fiscal 2026</p></div>"+
+  "<table><tr><th>Vale</th><th>Período</th><th>Gasolinera</th><th>Factura</th><th>Fecha Fact.</th><th>RFC</th></tr>"+
+  "<tr><td>"+v.folio+"</td><td>"+v.periodo_label+"</td><td>"+v.gasolinera+"</td><td>"+folio+"</td><td>"+fecha+"</td><td>"+rfc+"</td></tr></table>"+
+  "<table><tr><th>Concepto</th><th style='text-align:right;'>Importe</th></tr>"+
+  "<tr><td>Subtotal combustible ("+v.cargas.reduce(function(s,c){return s+c.litros;},0).toFixed(2)+" litros)</td><td style='text-align:right;'>"+fmt(subtotal)+"</td></tr>"+
+  "<tr><td>IVA 16%</td><td style='text-align:right;'>"+fmt(iva)+"</td></tr>"+
+  "<tr><td style='font-weight:700;'>TOTAL A PAGAR</td><td style='text-align:right;font-weight:700;font-size:13px;color:#6B0F1A;'>"+fmt(total)+"</td></tr></table>"+
+  "<div class='firmas'>"+
+  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
+  "<div class='firma'>___________________________<br>MTRA. LOURDES MEDINA GAMBOA<br>Síndica</div>"+
+  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
+  "</div></body></html>";
+  var w=window.open("","_blank","width=900,height=700");
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function combImprimirBitacora(){
+  var per=(document.getElementById("cb-periodo")||{value:""}).value;
+  var area=(document.getElementById("cb-area")||{value:""}).value;
+  var tipo=(document.getElementById("cb-tipo")||{value:""}).value;
+  var vales=getCombVales();
+  var filas=[];
+  vales.forEach(function(v){
+    if(per&&v.periodo!==per) return;
+    v.cargas.forEach(function(c){
+      if(area&&c.area!==area) return;
+      if(tipo&&c.tipo!==tipo) return;
+      filas.push({vale:v.folio,fecha:v.fecha,periodo:v.periodo_label,carga:c});
+    });
+  });
+  if(!filas.length){toast("Sin registros para imprimir","err");return;}
+  var totL=filas.reduce(function(s,f){return s+f.carga.litros;},0);
+  var totI=filas.reduce(function(s,f){return s+f.carga.importe;},0);
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Bitácora Combustible</title>"+
+  "<style>body{font-family:Arial,sans-serif;font-size:10px;margin:15px;}"+
+  "table{width:100%;border-collapse:collapse;}"+
+  "th{background:#6B0F1A;color:#fff;padding:4px 6px;text-align:left;font-size:9px;}"+
+  "td{padding:3px 6px;border-bottom:1px solid #eee;font-size:9px;}"+
+  "tr:nth-child(even)td{background:#fdf2f4;}"+
+  ".total-row td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
+  ".firma{display:inline-block;width:200px;text-align:center;border-top:1px solid #333;padding-top:5px;margin:30px 20px 0;font-size:10px;}</style></head><body>"+
+  "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:8px;margin-bottom:10px;'>"+
+  "<h1 style='font-size:13px;margin:0;'>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+  "<h2 style='font-size:12px;margin:3px 0;'>Tesorería Municipal — Bitácora de Carga de Combustible</h2>"+
+  "<p style='margin:2px 0;'>Ejercicio Fiscal 2026"+(per?" | Período: "+filas[0].periodo:"")+(area?" | Área: "+area:"")+(tipo?" | Combustible: "+tipo:"")+"</p></div>"+
+  "<table><thead><tr><th>Fecha</th><th>Vale</th><th>Vehículo</th><th>Placa</th><th>Área</th><th>Combustible</th><th>Litros</th><th>$/L</th><th>Importe</th><th>Operador</th></tr></thead>"+
+  "<tbody>"+filas.map(function(f,i){
+    return "<tr><td>"+f.fecha+"</td><td>"+f.vale+"</td><td>"+f.carga.vehiculo+"</td><td>"+f.carga.placa+"</td>"+
+      "<td>"+f.carga.area+"</td><td>"+f.carga.tipo+"</td>"+
+      "<td style='text-align:right;'>"+f.carga.litros.toFixed(2)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(f.carga.precio)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(f.carga.importe)+"</td>"+
+      "<td>"+f.carga.operador+"</td></tr>";
+  }).join("")+
+  "</tbody><tfoot><tr class='total-row'><td colspan='6' style='text-align:right;'>TOTALES:</td>"+
+  "<td style='text-align:right;'>"+totL.toFixed(2)+"</td><td></td>"+
+  "<td style='text-align:right;'>"+fmt(totI)+"</td><td></td></tr></tfoot></table>"+
+  "<div style='text-align:center;margin-top:30px;'>"+
+  "<span class='firma'>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</span>"+
+  "<span class='firma'>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</span>"+
+  "</div></body></html>";
+  var w=window.open("","_blank","width=1000,height=700");
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
 </script>
 
 <!-- MODAL: Ver Orden de Pago -->
