@@ -3511,11 +3511,13 @@ function rHist(){
   var de=(getEl("hde")||{value:""}).value;
   var ha=(getEl("hha")||{value:""}).value;
   var sols=getSols().filter(function(s){
+    // Solo Admin y Auxiliar ven todas; los demás solo las propias
+    if(!SE.p.hist && s.registrador!==SE.nombre) return false;
     if(es&&s.estado!==es) return false;
     if(area&&s.area!==area) return false;
     if(de&&s.fecha<de) return false;
     if(ha&&s.fecha>ha) return false;
-    if(q&&!(s.folio+s.area+s.solicitante+s.tipo+s.descripcion).toLowerCase().includes(q)) return false;
+    if(q&&!(s.folio+s.area+s.registrador+s.tipo+s.descripcion).toLowerCase().includes(q)) return false;
     return true;
   });
   // Actualizar selector de áreas
@@ -3543,7 +3545,7 @@ function rHist(){
       "<td style='font-weight:700;font-size:11px;'>"+s.folio+"</td>"+
       "<td>"+s.fecha+"</td>"+
       "<td style='font-size:11px;'>"+s.area+"</td>"+
-      "<td style='font-size:11px;'>"+s.solicitante+"</td>"+
+      "<td style='font-size:11px;'>"+s.registrador+"</td>"+
       "<td style='font-size:11px;'>"+s.tipo+"</td>"+
       "<td style='font-size:11px;max-width:180px;'>"+s.descripcion+"</td>"+
       "<td style='text-align:center;'><span class='est "+cls+"'>"+s.estado+"</span></td>"+
@@ -3585,6 +3587,59 @@ function histEliminar(id){
   toast("Solicitud eliminada","ok");
   rHist();
   uBadges();
+}
+
+
+/** Renderiza la tabla de Modificar Solicitudes (sec-sol-modificar)
+ *  Admin/Auxiliar ven todas las editables; Solicitante solo las propias.
+ */
+function rSolModificar(){
+  if(!SE) return;
+  var q   = (getEl("solmod-q") ||{value:""}).value.toLowerCase();
+  var es  = (getEl("solmod-es")||{value:""}).value;
+  var de  = (getEl("solmod-de")||{value:""}).value;
+  var ha  = (getEl("solmod-ha")||{value:""}).value;
+  var esAdmin = SE.p.hist; // hist=true → Admin / Auxiliar
+  var EDITABLES = ["PENDIENTE","RECHAZADO"];
+  var sols = getSols().filter(function(s){
+    // Solo solicitudes editables por defecto (a menos que el filtro cambie)
+    if(!es && EDITABLES.indexOf(s.estado)<0) return false;
+    if(es  && s.estado!==es) return false;
+    // Propias únicamente para solicitantes
+    if(!esAdmin && s.registrador!==SE.nombre) return false;
+    if(de && s.fecha<de) return false;
+    if(ha && s.fecha>ha) return false;
+    if(q  && !(s.folio+s.area+s.solicitante+s.tipo+s.descripcion).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  var tb = getEl("solmod-tbody");
+  if(!tb) return;
+  if(!sols.length){
+    tb.innerHTML = "<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:24px;'>Sin solicitudes editables</td></tr>";
+    return;
+  }
+  tb.innerHTML = sols.map(function(s){
+    var cls = sCls(s.estado);
+    var puedeEditar = s.registrador===SE.nombre || SE.p.cfg;
+    return "<tr>"+
+      "<td style='font-weight:700;font-size:11px;'>"+s.folio+"</td>"+
+      "<td>"+s.fecha+"</td>"+
+      "<td style='font-size:11px;'>"+s.area+"</td>"+
+      "<td style='font-size:11px;'>"+s.solicitante+"</td>"+
+      "<td style='font-size:11px;'>"+s.tipo+"</td>"+
+      "<td style='text-align:center;'><span class='est "+cls+"'>"+s.estado+"</span></td>"+
+      "<td style='text-align:center;white-space:nowrap;'>"+
+        "<button class='btn bo btm' onclick='verDet(\""+ s.id+"\")'> 👁 Ver</button> "+
+        (puedeEditar?"<button class='btn bw btm' onclick='abrirEdit(\""+ s.id+"\")'> ✏️ Editar</button>":"")+ 
+      "</td>"+
+    "</tr>";
+  }).join("");
+}
+
+function solmodLimpiar(){
+  ["solmod-q","solmod-de","solmod-ha"].forEach(function(id){ var e=getEl(id); if(e) e.value=""; });
+  var es=getEl("solmod-es"); if(es) es.value="";
+  rSolModificar();
 }
 
 function showSec(id,el){
