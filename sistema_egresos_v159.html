@@ -2068,7 +2068,7 @@ tr:last-child td{border-bottom:none;}
         </select>
       </div>
       <div class="fi"><label>Gasolinera *</label><input type="text" id="cv-gasolinera" value="GASOLINERA" placeholder="Nombre de la gasolinera"></div>
-      <div class="fi"><label>Encargado Parque Vehicular *</label><input type="text" id="cv-encargado" placeholder="Nombre del encargado"></div>
+      <div class="fi"><label>Encargado Parque Vehicular *</label><input type="text" id="cv-encargado" value="MELANIE AYLIN ORTIZ CARVAJAL"></div>
     </div>
     <!-- Tabla de cargas -->
     <div style="margin-top:16px;">
@@ -2135,29 +2135,96 @@ tr:last-child td{border-bottom:none;}
 
 <!-- FACTURA / PAGO -->
 <div class="sec" id="sec-comb-factura">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>🧾 Factura Quincenal / Orden de Pago</h3><p>Registra la factura de la gasolinera y genera la Orden de Pago</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>🧾 Factura XML / Orden de Pago</h3><p>Importa el XML de la gasolinera, selecciona las cargas que cubre y genera la Orden de Pago</p></div></div>
   <div class="card">
-    <div style="margin-bottom:14px;">
-      <label style="font-weight:600;font-size:12px;color:var(--vino);">Seleccionar Vale de Combustible</label>
-      <select id="cf-vale-sel" onchange="combSelValeFactura()" style="width:100%;margin-top:6px;">
+    <!-- Paso 1: Seleccionar vale -->
+    <div style="margin-bottom:16px;">
+      <label style="font-weight:600;font-size:12px;color:var(--vino);display:block;margin-bottom:6px;">1. Seleccionar Vale de Combustible</label>
+      <select id="cf-vale-sel" onchange="combSelValeFactura()" style="width:100%;">
         <option value="">-- Seleccionar vale --</option>
       </select>
     </div>
     <div id="cf-info" style="display:none;">
-      <div style="background:var(--vino-bg);border:1px solid #e8cfd3;border-left:3px solid var(--vino);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:12px;" id="cf-resumen"></div>
-      <div class="fg">
-        <div class="fi"><label>Folio Factura *</label><input type="text" id="cf-folio-fact" placeholder="Folio CFDI"></div>
-        <div class="fi"><label>Fecha Factura *</label><input type="date" id="cf-fecha-fact"></div>
-        <div class="fi"><label>RFC Gasolinera</label><input type="text" id="cf-rfc" placeholder="RFC del proveedor"></div>
-        <div class="fi"><label>Subtotal</label><input type="number" id="cf-subtotal" step="0.01" oninput="combCalcFactura()"></div>
-        <div class="fi"><label>IVA (16%)</label><input type="number" id="cf-iva" step="0.01" readonly style="background:#f5f5f5;"></div>
-        <div class="fi"><label>Total Factura</label><input type="number" id="cf-total" step="0.01" oninput="combCalcFacturaTotal()"></div>
+      <!-- Resumen del vale -->
+      <div id="cf-resumen" style="background:var(--vino-bg);border:1px solid #e8cfd3;border-left:3px solid var(--vino);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:12px;"></div>
+
+      <!-- Paso 2: Seleccionar filas del vale -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label style="font-weight:600;font-size:12px;color:var(--vino);">2. Seleccionar cargas que cubre esta factura</label>
+          <div style="display:flex;gap:8px;">
+            <button class="btn bo btm" onclick="combSelAllCargas(true)">Todas</button>
+            <button class="btn bo btm" onclick="combSelAllCargas(false)">Ninguna</button>
+          </div>
+        </div>
+        <div class="tw">
+          <table>
+            <thead><tr>
+              <th style="width:36px;text-align:center;"><input type="checkbox" id="cf-chk-all" onchange="combChkAll(this)"></th>
+              <th>#</th><th>Vehículo</th><th>Área</th><th>Placa</th>
+              <th>Combustible</th><th style="text-align:right;">Litros</th>
+              <th style="text-align:right;">$/L</th><th style="text-align:right;">Importe</th>
+              <th>Operador</th>
+            </tr></thead>
+            <tbody id="cf-cargas-body"></tbody>
+            <tfoot><tr>
+              <td colspan="6" style="text-align:right;font-weight:700;padding:6px 10px;font-size:12px;">Subtotal seleccionadas:</td>
+              <td style="text-align:right;font-weight:700;padding:6px 10px;" id="cf-sel-litros">0.00 L</td>
+              <td></td>
+              <td style="text-align:right;font-weight:700;padding:6px 10px;color:var(--vino);" id="cf-sel-importe">/bin/sh.00</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
+        </div>
       </div>
-      <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;">
-        <button class="btn bgold" onclick="combImprimirOP()">🖨️ Generar Orden de Pago</button>
-        <button class="btn bp" onclick="combGuardarFactura()">💾 Registrar Factura y Pago</button>
+
+      <!-- Paso 3: Importar XML -->
+      <div style="margin-bottom:16px;">
+        <label style="font-weight:600;font-size:12px;color:var(--vino);display:block;margin-bottom:8px;">3. Importar XML de la factura</label>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <label class="btn bp" style="cursor:pointer;margin:0;">
+            📂 Seleccionar XML
+            <input type="file" id="cf-xml-input" accept=".xml" style="display:none;" onchange="combParsearXML(this)">
+          </label>
+          <span id="cf-xml-nombre" style="font-size:12px;color:var(--text2);">Ningún archivo seleccionado</span>
+        </div>
+      </div>
+
+      <!-- Datos parseados del XML -->
+      <div id="cf-xml-datos" style="display:none;">
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-left:3px solid #16a34a;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:12px;">
+          XML importado correctamente
+        </div>
+        <div class="fg">
+          <div class="fi"><label>Folio CFDI</label><input type="text" id="cf-folio-fact" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>Fecha Factura</label><input type="text" id="cf-fecha-fact" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>RFC Emisor</label><input type="text" id="cf-rfc" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>Nombre Emisor</label><input type="text" id="cf-emisor" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>Subtotal</label><input type="number" id="cf-subtotal" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>IEPS</label><input type="number" id="cf-ieps" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>IVA (16%)</label><input type="number" id="cf-iva" readonly style="background:#f5f5f5;"></div>
+          <div class="fi"><label>Total Factura</label><input type="number" id="cf-total" readonly style="font-weight:700;background:#fdf2f4;color:var(--vino);"></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn bgold" onclick="combImprimirOP()">🖨️ Generar Orden de Pago</button>
+          <button class="btn bp" onclick="combGuardarFactura()">💾 Registrar y cerrar</button>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Facturas ya registradas en este vale -->
+  <div class="card" id="cf-facturas-registradas" style="display:none;margin-top:12px;">
+    <div class="ct">Facturas registradas en este vale</div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Folio CFDI</th><th>Fecha</th><th>RFC</th><th>Cargas</th>
+        <th style="text-align:right;">Subtotal</th><th style="text-align:right;">IEPS</th>
+        <th style="text-align:right;">IVA</th><th style="text-align:right;">Total</th>
+        <th style="text-align:center;">Acciones</th>
+      </tr></thead>
+      <tbody id="cf-fact-tbody"></tbody>
+    </table></div>
   </div>
 </div>
 
@@ -4293,7 +4360,7 @@ function abrirComp(id){
     +"<div class='fi'><label>Área (no modificable)</label><input type='text' id='c-area' value='"+s.area+"' readonly></div>"
     +"<div class='fi'><label>Fuente *</label><select id='c-fuente'><option value=''>Seleccionar</option>"+mkOpt(s.fuente||"",fondos)+"</select></div>"
     +"<div class='fi full'><label>Programa Presupuestal *</label><select id='c-prog'><option value=''>Seleccionar</option>"+mkOpt(s.programa||"",progs)+"</select></div>"
-    +"<div class='fi'><label id='c-benef-lbl'>Beneficiario"+(tipoSolAct==="APOYO ECONOMICO"?" <span style='color:var(--red);'>*</span>":"")+"</label><input type='text' id='c-benef' value='"+(s.beneficiario||"")+"' placeholder='"+(tipoSolAct==="APOYO ECONOMICO"?"Nombre del beneficiario (obligatorio)":"Si aplica")+"'></div>"
+    +"<div class='fi'><label id='c-benef-lbl'>"+( tipoSolAct==="DONACIONES A TERCEROS"?"Donatario":(tipoSolAct==="APOYOS ECONOMICOS"||tipoSolAct==="APOYO ECONOMICO"?"Beneficiario":"Beneficiario"))+((tipoSolAct==="APOYO ECONOMICO"||tipoSolAct==="APOYOS ECONOMICOS"||tipoSolAct==="DONACIONES A TERCEROS")?" <span style='color:var(--red);'>*</span>":"")+"</label><input type='text' id='c-benef' value='"+(s.beneficiario||"")+"' placeholder='"+(tipoSolAct==="DONACIONES A TERCEROS"?"Nombre del donatario (obligatorio)":(tipoSolAct==="APOYO ECONOMICO"?"Nombre del beneficiario (obligatorio)":"Si aplica"))+"'></div>"
     +"<div class='fi'><label>Proveedor</label><input type='text' id='c-prov' value='"+(s.proveedor||"")+"' placeholder='Si aplica'></div>"
 
 
@@ -4342,8 +4409,9 @@ function onCompTipoSol(){
   // Beneficiario
   var lb=document.getElementById("c-benef-lbl");
   var ib=document.getElementById("c-benef");
-  if(lb) lb.innerHTML="Beneficiario"+(esBenef?" <span style='color:var(--red);'>*</span>":"");
-  if(ib) ib.placeholder=esBenef?"Nombre del beneficiario (obligatorio)":"Si aplica";
+  var esDonac=val==="DONACIONES A TERCEROS";
+  if(lb) lb.innerHTML=(esDonac?"Donatario":"Beneficiario")+(esBenef?" <span style='color:var(--red);'>*</span>":"");
+  if(ib) ib.placeholder=esDonac?"Nombre del donatario (obligatorio)":(esBenef?"Nombre del beneficiario (obligatorio)":"Si aplica");
   if(ib) ib.style.border=esBenef?"1.5px solid var(--gold)":"";
 }
 
@@ -4376,7 +4444,7 @@ function guardarComp(){
   if(TIPOS_BENEF_OBL_COMP.indexOf(tipoSol)>=0&&!benef){
     document.getElementById("c-benef").style.border="1.5px solid var(--red)";
     document.getElementById("c-benef").focus();
-    toast("El beneficiario es obligatorio para Apoyo Económico","err");return;
+    toast("El beneficiario/donatario es obligatorio para este tipo de gasto","err");return;
   }
   document.getElementById("c-benef").style.border="";
   s.fuente=fuente;
@@ -6193,6 +6261,7 @@ function ccBuildRecibo(g){
   var fechaDoc=fechaObj.getDate()+" de "+meses[fechaObj.getMonth()]+" de "+fechaObj.getFullYear();
   var logo=getLogo();
   var esBenef=g.tipo==="APOYO ECONOMICO"||g.tipo==="APOYOS ECONOMICOS"||g.tipo==="DONACIONES A TERCEROS";
+  var esDonacion=g.tipo==="DONACIONES A TERCEROS";
   var extras=".datos{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-left:3px solid #6B0F1A;border-radius:8px;padding:12px;margin-bottom:16px;}"
     +".dato label{font-size:9px;font-weight:700;color:#6B0F1A;text-transform:uppercase;display:block;margin-bottom:2px;}"
     +".dato span{font-size:12px;font-weight:600;}"
@@ -6212,7 +6281,7 @@ function ccBuildRecibo(g){
     +"<div class='dato'><label>Fecha</label><span>"+fechaDoc+"</span></div>"
     +"<div class='dato'><label>Solicitud origen</label><span>"+g.solFolio+"</span></div>"
     +"<div class='dato'><label>Área</label><span>"+g.area+"</span></div>"
-    +"<div class='dato'><label>Solicitante</label><span>"+g.solicitante+"</span></div>"
+    +(esDonacion?"<div class='dato'><label>Solicitante</label><span>"+g.solicitante+"</span></div><div class='dato full'><label>Donatario (quien recibe)</label><span style='font-size:14px;font-weight:800;color:#3D0710;'>"+g.beneficiario+"</span></div>":"<div class='dato'><label>Solicitante</label><span>"+g.solicitante+"</span></div>")
     +"<div class='dato full'><label>Tipo de gasto</label><span>"+g.tipo+"</span></div>"
     +"<div class='dato full'><label>Descripción</label><span style='font-weight:400;'>"+g.descripcion+"</span></div>"
     +(esBenef&&g.beneficiario?"<div class='dato full'><label>Beneficiario</label><span>"+g.beneficiario+"</span></div>":"")
@@ -6249,7 +6318,7 @@ function ccBuildRecibo(g){
     +"<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:6px;'>("+numLetra(g.monto)+")</div>"
     +"</div>"
     +"<div class='firmas-pie'><div class='firmas-grid col4'>"
-    +"<div class='firma'><div class='linea'></div><div class='nombre'>"+(esBenef&&g.beneficiario?g.beneficiario:g.solicitante)+"</div><div class='cargo'>"+(esBenef&&g.beneficiario?"Beneficiario":g.area)+" — Recibe</div></div>"
+    +(esDonacion?"<div class='firma'><div class='linea'></div><div class='nombre'>"+(g.beneficiario||g.solicitante)+"</div><div class='cargo'>Donatario — Recibe</div></div>":("<div class='firma'><div class='linea'></div><div class='nombre'>"+(esBenef&&g.beneficiario?g.beneficiario:g.solicitante)+"</div><div class='cargo'>"+(esBenef&&g.beneficiario?"Beneficiario":g.area)+" — Recibe</div></div>"))
     +"<div class='firma'><div class='linea'></div><div class='nombre'>CP. ALICIA HUERVO DIAZ</div><div class='cargo'>Tesorera — Valida presupuestalmente</div></div>"
     +"<div class='firma'><div class='linea'></div><div class='nombre'>LIC. ERENDIRA SALGADO CARRION</div><div class='cargo'>Titular OIC — Revisa</div></div>"
     +"<div class='firma'><div class='linea'></div><div class='nombre'>ING. CHRISTIAN ROMERO PEREZ</div><div class='cargo'>Presidente Municipal — Autoriza</div></div>"
@@ -9361,7 +9430,7 @@ function combLimpiarVale(){
   document.getElementById("cv-fecha").value=new Date().toISOString().slice(0,10);
   document.getElementById("cv-periodo").value="";
   document.getElementById("cv-gasolinera").value="GASOLINERA";
-  document.getElementById("cv-encargado").value="";
+  document.getElementById("cv-encargado").value="MELANIE AYLIN ORTIZ CARVAJAL";
   document.getElementById("cv-cargas-body").innerHTML="";
   document.getElementById("cv-total").textContent="$0.00";
 }
@@ -9426,235 +9495,286 @@ function combVerVale(id){
 function combSelValeFactura(){
   var id=document.getElementById("cf-vale-sel").value;
   var info=document.getElementById("cf-info");
-  if(!id){info.style.display="none";return;}
+  var fReg=document.getElementById("cf-facturas-registradas");
+  if(!id){info.style.display="none";if(fReg)fReg.style.display="none";return;}
   var v=getCombVales().filter(function(x){return x.id===id;})[0];
   if(!v){info.style.display="none";return;}
+  // Resumen
+  var factsReg=v.facturas||[];
+  var cargasCubiertas=factsReg.reduce(function(s,f){return s.concat(f.filas);},[]);
+  var pendientes=v.cargas.filter(function(c,i){return cargasCubiertas.indexOf(i)<0;});
   document.getElementById("cf-resumen").innerHTML=
     "<b>"+v.folio+"</b> | "+v.periodo_label+" | "+v.gasolinera+
-    " | <b>"+v.cargas.length+" cargas</b> | Total: <b>"+fmt(v.total)+"</b>";
-  document.getElementById("cf-total").value=v.total.toFixed(2);
-  document.getElementById("cf-subtotal").value=(v.total/1.16).toFixed(2);
-  document.getElementById("cf-iva").value=(v.total-v.total/1.16).toFixed(2);
-  document.getElementById("cf-fecha-fact").value=new Date().toISOString().slice(0,10);
+    " | <b>"+v.cargas.length+" cargas totales</b> | "+
+    "<span style='color:"+(pendientes.length?"#c05621":"#16a34a")+";font-weight:700;'>"+
+    pendientes.length+" pendientes de facturar</span> | Total vale: <b>"+fmt(v.total)+"</b>";
+  // Tabla de cargas con checkboxes
+  var tbody=document.getElementById("cf-cargas-body");
+  tbody.innerHTML=v.cargas.map(function(c,i){
+    var cubierta=cargasCubiertas.indexOf(i)>=0;
+    var bg=cubierta?"background:#f0fdf4;":"";
+    var disabled=cubierta?"disabled":"";
+    var chk=cubierta?"checked":"";
+    var badge=cubierta?"<span style='font-size:10px;color:#16a34a;font-weight:700;'>✓ facturada</span>":"";
+    return "<tr style='"+bg+"' id='cf-row-"+i+"'>"+
+      "<td style='text-align:center;'><input type='checkbox' class='cf-chk' data-idx='"+i+"' data-litros='"+c.litros+"' data-importe='"+c.importe+"' "+chk+" "+disabled+" onchange='combCalcSeleccion()'></td>"+
+      "<td>"+(i+1)+"</td>"+
+      "<td style='font-size:11px;'>"+c.vehiculo+"</td>"+
+      "<td style='font-size:11px;'>"+c.area+"</td>"+
+      "<td>"+c.placa+"</td>"+
+      "<td><span style='font-size:11px;font-weight:600;padding:2px 5px;border-radius:3px;background:"+(c.tipo==="MAGNA"?"#e8f5e9":c.tipo==="PREMIUM"?"#fce4ec":"#e3f2fd")+";'>"+c.tipo+"</span></td>"+
+      "<td style='text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.precio)+"</td>"+
+      "<td style='text-align:right;font-weight:600;'>"+fmt(c.importe)+"</td>"+
+      "<td style='font-size:11px;'>"+c.operador+" "+badge+"</td>"+
+    "</tr>";
+  }).join("");
+  combCalcSeleccion();
+  // Reset XML
+  document.getElementById("cf-xml-input").value="";
+  document.getElementById("cf-xml-nombre").textContent="Ningún archivo seleccionado";
+  document.getElementById("cf-xml-datos").style.display="none";
+  // Facturas registradas
+  combRenderFactsReg(v);
   info.style.display="block";
 }
 
-function combCalcFactura(){
-  var sub=parseFloat(document.getElementById("cf-subtotal").value)||0;
-  var iva=sub*0.16;
-  document.getElementById("cf-iva").value=iva.toFixed(2);
-  document.getElementById("cf-total").value=(sub+iva).toFixed(2);
+function combChkAll(chkAll){
+  document.querySelectorAll(".cf-chk:not([disabled])").forEach(function(c){c.checked=chkAll.checked;});
+  combCalcSeleccion();
 }
 
-function combCalcFacturaTotal(){
-  var tot=parseFloat(document.getElementById("cf-total").value)||0;
-  var sub=tot/1.16;
-  document.getElementById("cf-subtotal").value=sub.toFixed(2);
-  document.getElementById("cf-iva").value=(tot-sub).toFixed(2);
+function combSelAllCargas(sel){
+  document.querySelectorAll(".cf-chk:not([disabled])").forEach(function(c){c.checked=sel;});
+  combCalcSeleccion();
+}
+
+function combCalcSeleccion(){
+  var litros=0,importe=0,n=0;
+  document.querySelectorAll(".cf-chk:not([disabled])").forEach(function(c){
+    if(c.checked){
+      litros+=parseFloat(c.dataset.litros)||0;
+      importe+=parseFloat(c.dataset.importe)||0;
+      n++;
+    }
+  });
+  document.getElementById("cf-sel-litros").textContent=litros.toFixed(2)+" L";
+  document.getElementById("cf-sel-importe").textContent=fmt(importe);
+  var all=document.querySelectorAll(".cf-chk:not([disabled])");
+  var allChk=document.getElementById("cf-chk-all");
+  if(allChk) allChk.checked=(n>0&&n===all.length);
+}
+
+function combGetFilasSeleccionadas(){
+  var filas=[];
+  document.querySelectorAll(".cf-chk:not([disabled])").forEach(function(c){
+    if(c.checked) filas.push(parseInt(c.dataset.idx));
+  });
+  return filas;
+}
+
+function combParsearXML(inp){
+  var file=inp.files[0];
+  if(!file){return;}
+  document.getElementById("cf-xml-nombre").textContent=file.name;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var parser=new DOMParser();
+      var xml=parser.parseFromString(e.target.result,"text/xml");
+      var ns33="http://www.sat.gob.mx/cfd/3";
+      var ns40="http://www.sat.gob.mx/cfd/4";
+      // Try CFDI 4.0 first, then 3.3
+      var comp=xml.getElementsByTagNameNS(ns40,"Comprobante")[0]||
+               xml.getElementsByTagNameNS(ns33,"Comprobante")[0]||
+               xml.getElementsByTagName("cfdi:Comprobante")[0]||
+               xml.getElementsByTagName("Comprobante")[0];
+      if(!comp){toast("No se pudo leer el XML. Verifica que sea un CFDI válido.","err");return;}
+      // Emisor
+      var emisor=xml.getElementsByTagNameNS(ns40,"Emisor")[0]||
+                 xml.getElementsByTagNameNS(ns33,"Emisor")[0]||
+                 xml.getElementsByTagName("cfdi:Emisor")[0]||
+                 xml.getElementsByTagName("Emisor")[0];
+      var rfcEmisor=(emisor&&emisor.getAttribute("Rfc"))||"";
+      var nomEmisor=(emisor&&emisor.getAttribute("Nombre"))||"";
+      // Datos principales
+      var folio=(comp.getAttribute("Folio")||comp.getAttribute("Serie")||"")+
+                (comp.getAttribute("Serie")&&comp.getAttribute("Folio")?comp.getAttribute("Folio"):"");
+      var uuid="";
+      var timbre=xml.getElementsByTagName("tfd:TimbreFiscalDigital")[0]||
+                 xml.getElementsByTagName("TimbreFiscalDigital")[0];
+      if(timbre) uuid=timbre.getAttribute("UUID")||"";
+      var folioDoc=uuid||folio||(comp.getAttribute("Serie")||"")+(comp.getAttribute("Folio")||"");
+      var fecha=(comp.getAttribute("Fecha")||"").slice(0,10);
+      var subtotal=parseFloat(comp.getAttribute("SubTotal")||0);
+      var total=parseFloat(comp.getAttribute("Total")||0);
+      // IEPS — buscar en Impuestos/Traslados
+      var ieps=0;
+      var traslados=xml.getElementsByTagName("cfdi:Traslado");
+      if(!traslados.length) traslados=xml.getElementsByTagName("Traslado");
+      for(var i=0;i<traslados.length;i++){
+        var imp=traslados[i].getAttribute("Impuesto")||"";
+        if(imp==="003"||imp.toUpperCase()==="IEPS"){
+          ieps+=parseFloat(traslados[i].getAttribute("Importe")||traslados[i].getAttribute("importe")||0);
+        }
+      }
+      // IVA
+      var iva=0;
+      for(var i=0;i<traslados.length;i++){
+        var imp=traslados[i].getAttribute("Impuesto")||"";
+        if(imp==="002"||imp.toUpperCase()==="IVA"){
+          iva+=parseFloat(traslados[i].getAttribute("Importe")||traslados[i].getAttribute("importe")||0);
+        }
+      }
+      // Si no encontró IVA/IEPS en traslados individuales, buscar en totales
+      if(!iva&&!ieps){
+        var impTot=xml.getElementsByTagName("cfdi:Impuestos")[0]||xml.getElementsByTagName("Impuestos")[0];
+        if(impTot){
+          iva=parseFloat(impTot.getAttribute("TotalImpuestosTrasladados")||0);
+        }
+      }
+      // Llenar campos
+      document.getElementById("cf-folio-fact").value=folioDoc;
+      document.getElementById("cf-fecha-fact").value=fecha;
+      document.getElementById("cf-rfc").value=rfcEmisor;
+      document.getElementById("cf-emisor").value=nomEmisor;
+      document.getElementById("cf-subtotal").value=subtotal.toFixed(2);
+      document.getElementById("cf-ieps").value=ieps.toFixed(2);
+      document.getElementById("cf-iva").value=iva.toFixed(2);
+      document.getElementById("cf-total").value=total.toFixed(2);
+      document.getElementById("cf-xml-datos").style.display="block";
+      toast("XML importado: "+folioDoc+" | Total: "+fmt(total),"ok");
+    }catch(err){
+      toast("Error al parsear XML: "+err.message,"err");
+    }
+  };
+  reader.readAsText(file,"UTF-8");
 }
 
 function combGuardarFactura(){
   var id=document.getElementById("cf-vale-sel").value;
   if(!id){toast("Selecciona un vale","err");return;}
+  var filas=combGetFilasSeleccionadas();
+  if(!filas.length){toast("Selecciona al menos una carga del vale","err");return;}
   var folio=document.getElementById("cf-folio-fact").value.trim();
   var fecha=document.getElementById("cf-fecha-fact").value;
+  if(!folio||!fecha){toast("Importa el XML de la factura primero","err");return;}
   var rfc=document.getElementById("cf-rfc").value.trim().toUpperCase();
+  var emisor=document.getElementById("cf-emisor").value.trim().toUpperCase();
   var subtotal=parseFloat(document.getElementById("cf-subtotal").value)||0;
+  var ieps=parseFloat(document.getElementById("cf-ieps").value)||0;
   var iva=parseFloat(document.getElementById("cf-iva").value)||0;
   var total=parseFloat(document.getElementById("cf-total").value)||0;
-  if(!folio||!fecha){toast("Ingresa folio y fecha de factura","err");return;}
   var vales=getCombVales();
   vales=vales.map(function(v){
     if(v.id!==id) return v;
-    v.factura={folio:folio,fecha:fecha,rfc:rfc,subtotal:subtotal,iva:iva,total:total};
-    v.estado="PAGADO";
+    if(!v.facturas) v.facturas=[];
+    v.facturas.push({folio:folio,fecha:fecha,rfc:rfc,emisor:emisor,
+      subtotal:subtotal,ieps:ieps,iva:iva,total:total,filas:filas,
+      fechaRegistro:new Date().toISOString()});
+    // ¿Todas las cargas cubiertas?
+    var todasCubiertas=v.facturas.reduce(function(s,f){return s.concat(f.filas);},[]);
+    if(todasCubiertas.length>=v.cargas.length) v.estado="PAGADO";
+    else v.estado="FACTURADO PARCIAL";
     return v;
   });
   setCombVales(vales);
-  toast("Factura registrada y vale marcado como PAGADO","ok");
+  toast("Factura registrada: "+folio+" | "+fmt(total),"ok");
   combInitSelects();
   rCombVales();
-  rCombBitacora();
-  document.getElementById("cf-info").style.display="none";
-  document.getElementById("cf-vale-sel").value="";
+  // Refrescar vista
+  document.getElementById("cf-vale-sel").value=id;
+  combSelValeFactura();
 }
 
-function rCombBitacora(){
-  var per=(document.getElementById("cb-periodo")||{value:""}).value;
-  var eco=(document.getElementById("cb-vehiculo")||{value:""}).value;
-  var area=(document.getElementById("cb-area")||{value:""}).value;
-  var tipo=(document.getElementById("cb-tipo")||{value:""}).value;
-  var vales=getCombVales();
-  var filas=[];
-  vales.forEach(function(v){
-    if(per&&v.periodo!==per) return;
-    v.cargas.forEach(function(c){
-      if(eco&&String(c.eco)!==eco) return;
-      if(area&&c.area!==area) return;
-      if(tipo&&c.tipo!==tipo) return;
-      filas.push({vale:v.folio,fecha:v.fecha,periodo:v.periodo_label,carga:c});
-    });
-  });
-  var tb=document.getElementById("cb-tbody");
-  if(!tb) return;
-  var totL=0,totI=0;
-  if(!filas.length){
-    tb.innerHTML="<tr><td colspan='10' style='text-align:center;color:var(--text3);padding:20px;'>Sin registros</td></tr>";
+function combRenderFactsReg(v){
+  var div=document.getElementById("cf-facturas-registradas");
+  var facts=v.facturas||[];
+  if(!facts.length){div.style.display="none";return;}
+  div.style.display="block";
+  document.getElementById("cf-fact-tbody").innerHTML=facts.map(function(f,fi){
+    return "<tr>"+
+      "<td style='font-weight:600;font-size:11px;'>"+f.folio+"</td>"+
+      "<td>"+f.fecha+"</td>"+
+      "<td style='font-size:11px;'>"+f.rfc+"</td>"+
+      "<td style='text-align:center;'>"+f.filas.length+" cargas</td>"+
+      "<td style='text-align:right;'>"+fmt(f.subtotal)+"</td>"+
+      "<td style='text-align:right;color:#c05621;'>"+fmt(f.ieps)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(f.iva)+"</td>"+
+      "<td style='text-align:right;font-weight:700;color:var(--vino);'>"+fmt(f.total)+"</td>"+
+      "<td style='text-align:center;'>"+
+        "<button class='btn bgold btm' onclick='combImprimirOP(\""+v.id+"\","+fi+")'>🖨️ OP</button>"+
+      "</td></tr>";
+  }).join("");
+}
+
+function combImprimirOP(valeId,factIdx){
+  // Puede llamarse desde botón de factura registrada o desde el formulario activo
+  var v,f;
+  if(valeId!==undefined){
+    v=getCombVales().filter(function(x){return x.id===valeId;})[0];
+    f=(v&&v.facturas)?v.facturas[factIdx]:null;
   } else {
-    tb.innerHTML=filas.map(function(f,i){
-      totL+=f.carga.litros; totI+=f.carga.importe;
-      return "<tr style='background:"+(i%2?"#fdf2f4":"#fff")+";'>"+
-        "<td>"+f.fecha+"</td>"+
-        "<td style='font-size:11px;font-weight:600;'>"+f.vale+"</td>"+
-        "<td style='font-size:11px;'>"+f.carga.vehiculo+"</td>"+
-        "<td>"+f.carga.placa+"</td>"+
-        "<td style='font-size:11px;'>"+f.carga.area+"</td>"+
-        "<td><span style='font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:"+(f.carga.tipo==="MAGNA"?"#e8f5e9":f.carga.tipo==="PREMIUM"?"#fce4ec":"#e3f2fd")+";'>"+f.carga.tipo+"</span></td>"+
-        "<td style='text-align:right;'>"+f.carga.litros.toFixed(2)+"</td>"+
-        "<td style='text-align:right;'>"+fmt(f.carga.precio)+"</td>"+
-        "<td style='text-align:right;font-weight:600;'>"+fmt(f.carga.importe)+"</td>"+
-        "<td style='font-size:11px;'>"+f.carga.operador+"</td>"+
-      "</tr>";
-    }).join("");
+    var id=document.getElementById("cf-vale-sel").value;
+    v=getCombVales().filter(function(x){return x.id===id;})[0];
+    var folio=document.getElementById("cf-folio-fact").value.trim();
+    if(!folio){toast("Importa el XML primero","err");return;}
+    f={
+      folio:folio,
+      fecha:document.getElementById("cf-fecha-fact").value,
+      rfc:document.getElementById("cf-rfc").value,
+      emisor:document.getElementById("cf-emisor").value,
+      subtotal:parseFloat(document.getElementById("cf-subtotal").value)||0,
+      ieps:parseFloat(document.getElementById("cf-ieps").value)||0,
+      iva:parseFloat(document.getElementById("cf-iva").value)||0,
+      total:parseFloat(document.getElementById("cf-total").value)||0,
+      filas:combGetFilasSeleccionadas()
+    };
   }
-  document.getElementById("cb-tot-litros").textContent=totL.toFixed(2)+" L";
-  document.getElementById("cb-tot-importe").textContent=fmt(totI);
-}
-
-function combImprimirVale(id){
-  var v=getCombVales().filter(function(x){return x.id===id;})[0];
-  if(!v) return;
-  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Vale Combustible "+v.folio+"</title>"+
+  if(!v||!f){toast("Datos incompletos","err");return;}
+  var cargasFact=f.filas.map(function(i){return v.cargas[i];}).filter(Boolean);
+  var totLitros=cargasFact.reduce(function(s,c){return s+c.litros;},0);
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Orden de Pago Combustible "+f.folio+"</title>"+
   "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#1a1a1a;}"+
   "h1{font-size:14px;margin:0;}h2{font-size:13px;margin:4px 0;}"+
-  ".hdr{text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:12px;}"+
-  ".info{display:flex;gap:20px;margin-bottom:12px;flex-wrap:wrap;}"+
-  ".info div{flex:1;min-width:160px;}.info label{font-weight:700;font-size:10px;color:#6B0F1A;display:block;}"+
-  "table{width:100%;border-collapse:collapse;margin-top:8px;}"+
-  "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
-  "td{padding:4px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
-  "tr:nth-child(even)td{background:#fdf2f4;}"+
-  ".total-row td{font-weight:700;background:#f5f5f5;border-top:2px solid #6B0F1A;}"+
-  ".firmas{display:flex;gap:30px;margin-top:30px;}"+
-  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}"+
-  "@media print{body{margin:10px;}}</style></head><body>"+
-  "<div class='hdr'><h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
-  "<h2>Tesorería Municipal — Vale de Combustible</h2>"+
-  "<p style='margin:4px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
-  "<div style='display:flex;justify-content:space-between;margin-bottom:10px;'>"+
-  "<div><b>GASOLINERA:</b> "+v.gasolinera+"<br><b>ENCARGADO:</b> "+v.encargado+"</div>"+
-  "<div style='text-align:right;'><b>FOLIO:</b> "+v.folio+"<br><b>FECHA:</b> "+v.fecha+"<br><b>PERÍODO:</b> "+v.periodo_label+"</div></div>"+
-  "<table><thead><tr><th>#</th><th>Vehículo</th><th>Área</th><th>Placa</th><th>Combustible</th><th>Litros</th><th>$/Litro</th><th>Importe</th><th>Operador</th></tr></thead>"+
-  "<tbody>"+v.cargas.map(function(c,i){
-    return "<tr><td>"+(i+1)+"</td><td>"+c.vehiculo+"</td><td>"+c.area+"</td><td>"+c.placa+"</td><td>"+c.tipo+"</td>"+
-      "<td style='text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
-      "<td style='text-align:right;'>"+fmt(c.precio)+"</td>"+
-      "<td style='text-align:right;'>"+fmt(c.importe)+"</td>"+
-      "<td>"+c.operador+"</td></tr>";
-  }).join("")+
-  "</tbody><tfoot><tr class='total-row'><td colspan='7' style='text-align:right;'>TOTAL:</td>"+
-  "<td style='text-align:right;'>"+fmt(v.total)+"</td><td></td></tr></tfoot></table>"+
-  "<div class='firmas'>"+
-  "<div class='firma'>___________________________<br>"+v.encargado+"<br>Encargado Parque Vehicular</div>"+
-  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
-  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
-  "</div></body></html>";
-  var w=window.open("","_blank","width=900,height=700");
-  w.document.write(html);
-  w.document.close();
-  w.print();
-}
-
-function combImprimirValePreview(){
-  var cargas=combGetFilas();
-  if(!cargas.length){toast("Agrega al menos una carga","err");return;}
-  var total=cargas.reduce(function(s,c){return s+c.importe;},0);
-  var v={
-    folio:"BORRADOR",
-    fecha:document.getElementById("cv-fecha").value,
-    periodo_label:document.getElementById("cv-periodo").options[document.getElementById("cv-periodo").selectedIndex]&&
-      document.getElementById("cv-periodo").options[document.getElementById("cv-periodo").selectedIndex].text||"",
-    gasolinera:document.getElementById("cv-gasolinera").value.trim().toUpperCase(),
-    encargado:document.getElementById("cv-encargado").value.trim().toUpperCase(),
-    cargas:cargas,
-    total:total
-  };
-  combImprimirVale(null);
-  // Re-use print function with temp object
-  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Vale Combustible BORRADOR</title>"+
-  "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;}"+
-  "table{width:100%;border-collapse:collapse;}"+
-  "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
-  "td{padding:4px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
-  ".total-row td{font-weight:700;background:#f5f5f5;border-top:2px solid #6B0F1A;}"+
-  ".firmas{display:flex;gap:30px;margin-top:30px;}"+
-  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}</style></head><body>"+
-  "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:12px;'>"+
-  "<h1 style='font-size:14px;margin:0;'>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
-  "<h2 style='font-size:13px;margin:4px 0;'>Tesorería Municipal — Vale de Combustible</h2>"+
-  "<p style='margin:4px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
-  "<div style='display:flex;justify-content:space-between;margin-bottom:10px;'>"+
-  "<div><b>GASOLINERA:</b> "+v.gasolinera+"<br><b>ENCARGADO:</b> "+v.encargado+"</div>"+
-  "<div style='text-align:right;'><b>FOLIO:</b> BORRADOR<br><b>FECHA:</b> "+v.fecha+"<br><b>PERÍODO:</b> "+v.periodo_label+"</div></div>"+
-  "<table><thead><tr><th>#</th><th>Vehículo</th><th>Área</th><th>Placa</th><th>Combustible</th><th>Litros</th><th>$/Litro</th><th>Importe</th><th>Operador</th></tr></thead>"+
-  "<tbody>"+v.cargas.map(function(c,i){
-    return "<tr><td>"+(i+1)+"</td><td>"+c.vehiculo+"</td><td>"+c.area+"</td><td>"+c.placa+"</td><td>"+c.tipo+"</td>"+
-      "<td style='text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
-      "<td style='text-align:right;'>"+fmt(c.precio)+"</td>"+
-      "<td style='text-align:right;'>"+fmt(c.importe)+"</td>"+
-      "<td>"+c.operador+"</td></tr>";
-  }).join("")+
-  "</tbody><tfoot><tr class='total-row'><td colspan='7' style='text-align:right;'>TOTAL:</td>"+
-  "<td style='text-align:right;'>"+fmt(v.total)+"</td><td></td></tr></tfoot></table>"+
-  "<div class='firmas'>"+
-  "<div class='firma'>___________________________<br>"+v.encargado+"<br>Encargado Parque Vehicular</div>"+
-  "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
-  "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
-  "</div></body></html>";
-  var w=window.open("","_blank","width=900,height=700");
-  w.document.write(html);
-  w.document.close();
-  w.print();
-}
-
-function combImprimirOP(){
-  var id=document.getElementById("cf-vale-sel").value;
-  if(!id){toast("Selecciona un vale","err");return;}
-  var v=getCombVales().filter(function(x){return x.id===id;})[0];
-  if(!v) return;
-  var folio=document.getElementById("cf-folio-fact").value.trim();
-  var fecha=document.getElementById("cf-fecha-fact").value;
-  var rfc=document.getElementById("cf-rfc").value.trim().toUpperCase();
-  var subtotal=parseFloat(document.getElementById("cf-subtotal").value)||0;
-  var iva=parseFloat(document.getElementById("cf-iva").value)||0;
-  var total=parseFloat(document.getElementById("cf-total").value)||0;
-  if(!folio||!fecha){toast("Ingresa folio y fecha de factura primero","err");return;}
-  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Orden de Pago Combustible</title>"+
-  "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;}"+
   "table{width:100%;border-collapse:collapse;margin:8px 0;}"+
   "th{background:#6B0F1A;color:#fff;padding:5px 8px;text-align:left;font-size:10px;}"+
   "td{padding:5px 8px;border-bottom:1px solid #eee;font-size:10px;}"+
-  ".firmas{display:flex;gap:30px;margin-top:40px;}"+
-  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}</style></head><body>"+
+  "tr:nth-child(even)td{background:#fdf2f4;}"+
+  ".tot td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
+  ".monto{text-align:center;border:2px solid #6B0F1A;border-radius:8px;padding:14px;margin:16px 0;}"+
+  ".monto-num{font-size:26px;font-weight:700;color:#6B0F1A;}"+
+  ".firmas{display:flex;gap:24px;margin-top:36px;}"+
+  ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}"+
+  "@media print{body{margin:8px;}}</style></head><body>"+
   "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:14px;'>"+
-  "<h1 style='font-size:14px;margin:0;'>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
-  "<h2 style='font-size:13px;margin:4px 0;'>Tesorería Municipal — Orden de Pago — Combustible</h2>"+
-  "<p style='margin:4px 0;'>Ejercicio Fiscal 2026</p></div>"+
-  "<table><tr><th>Vale</th><th>Período</th><th>Gasolinera</th><th>Factura</th><th>Fecha Fact.</th><th>RFC</th></tr>"+
-  "<tr><td>"+v.folio+"</td><td>"+v.periodo_label+"</td><td>"+v.gasolinera+"</td><td>"+folio+"</td><td>"+fecha+"</td><td>"+rfc+"</td></tr></table>"+
-  "<table><tr><th>Concepto</th><th style='text-align:right;'>Importe</th></tr>"+
-  "<tr><td>Subtotal combustible ("+v.cargas.reduce(function(s,c){return s+c.litros;},0).toFixed(2)+" litros)</td><td style='text-align:right;'>"+fmt(subtotal)+"</td></tr>"+
-  "<tr><td>IVA 16%</td><td style='text-align:right;'>"+fmt(iva)+"</td></tr>"+
-  "<tr><td style='font-weight:700;'>TOTAL A PAGAR</td><td style='text-align:right;font-weight:700;font-size:13px;color:#6B0F1A;'>"+fmt(total)+"</td></tr></table>"+
+  "<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+  "<h2>Tesorería Municipal — Orden de Pago — Combustible</h2>"+
+  "<p style='margin:3px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
+  "<table><thead><tr><th>Vale</th><th>Período</th><th>Gasolinera</th><th>Folio CFDI</th><th>Fecha Factura</th><th>RFC Emisor</th></tr></thead>"+
+  "<tbody><tr><td>"+v.folio+"</td><td>"+v.periodo_label+"</td><td>"+v.gasolinera+"</td><td style='font-weight:700;'>"+f.folio+"</td><td>"+f.fecha+"</td><td>"+f.rfc+"</td></tr></tbody></table>"+
+  "<table><thead><tr><th>#</th><th>Vehículo</th><th>Área</th><th>Placa</th><th>Combustible</th><th style='text-align:right;'>Litros</th><th style='text-align:right;'>$/L</th><th style='text-align:right;'>Importe</th><th>Operador</th></tr></thead>"+
+  "<tbody>"+cargasFact.map(function(c,i){
+    return "<tr><td>"+(i+1)+"</td><td>"+c.vehiculo+"</td><td>"+c.area+"</td><td>"+c.placa+"</td><td>"+c.tipo+"</td>"+
+      "<td style='text-align:right;'>"+c.litros.toFixed(2)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.precio)+"</td>"+
+      "<td style='text-align:right;'>"+fmt(c.importe)+"</td>"+
+      "<td>"+c.operador+"</td></tr>";
+  }).join("")+
+  "<tr class='tot'><td colspan='5' style='text-align:right;'>SUBTOTAL ("+totLitros.toFixed(2)+" L):</td><td colspan='4' style='text-align:right;'>"+fmt(f.subtotal)+"</td></tr>"+
+  "<tr><td colspan='5' style='text-align:right;'>IEPS:</td><td colspan='4' style='text-align:right;color:#c05621;'>"+fmt(f.ieps)+"</td></tr>"+
+  "<tr><td colspan='5' style='text-align:right;'>IVA (16%):</td><td colspan='4' style='text-align:right;'>"+fmt(f.iva)+"</td></tr>"+
+  "</tbody></table>"+
+  "<div class='monto'><div style='font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;'>Total a pagar</div>"+
+  "<div class='monto-num'>"+fmt(f.total)+"</div>"+
+  "<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:4px;'>("+numLetra(f.total)+")</div></div>"+
   "<div class='firmas'>"+
   "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
   "<div class='firma'>___________________________<br>MTRA. LOURDES MEDINA GAMBOA<br>Síndica</div>"+
   "<div class='firma'>___________________________<br>ING. CHRISTIAN ROMERO PÉREZ<br>Presidente Municipal</div>"+
   "</div></body></html>";
-  var w=window.open("","_blank","width=900,height=700");
-  w.document.write(html);
-  w.document.close();
-  w.print();
+  var w=window.open("","_blank","width=1000,height=750");
+  w.document.write(html);w.document.close();w.print();
 }
 
 function combImprimirBitacora(){
