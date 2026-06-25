@@ -2526,6 +2526,43 @@ async function dbDelete(tabla, id) {
   }
 }
 
+
+async function syncToSupabase(tabla, lsKey) {
+  try {
+    var datos = lsGet(lsKey, []);
+    if (!datos.length) return;
+    var ultimo = datos[0];
+    await supa.from(tabla).upsert(ultimo, {onConflict:'id'});
+  } catch(e) {
+    console.warn('Sync error:', tabla, e.message);
+  }
+}
+
+async function pullFromSupabase() {
+  var tablas = [
+    {tabla:'solicitudes',          ls:'egresos_sols'},
+    {tabla:'requisiciones',        ls:'egresos_reqs'},
+    {tabla:'ordenes_compra',       ls:'egresos_ords'},
+    {tabla:'comprobaciones',       ls:'egresos_comps'},
+    {tabla:'pagos',                ls:'egresos_pagos'},
+    {tabla:'caja_chica',           ls:'egresos_cc'},
+    {tabla:'combustible_facturas', ls:'comb_facturas'},
+    {tabla:'mtto_bitacora',        ls:'mtto_bitacora'},
+  ];
+  var total = 0;
+  for (var i=0; i<tablas.length; i++) {
+    var t = tablas[i];
+    try {
+      var res = await supa.from(t.tabla).select('*').order('fecha_registro', {ascending:false});
+      if (!res.error && res.data && res.data.length) {
+        lsSet(t.ls, res.data);
+        total += res.data.length;
+      }
+    } catch(e) { console.warn('Pull error:', t.tabla, e.message); }
+  }
+  return total;
+}
+
 async function migrarDatos() {
   var tablas = [
     {ls:'egresos_sols',  tabla:'solicitudes'},
