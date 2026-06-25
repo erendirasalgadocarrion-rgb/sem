@@ -1651,16 +1651,19 @@ tr:last-child td{border-bottom:none;}
     </div>
   </div>
 
+  <div style="margin-top:14px;">
+    <!-- MULTI-FACTURAS -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <label style="font-weight:700;font-size:12px;color:var(--vino);">Facturas de soporte <span style="font-size:10px;font-weight:400;color:var(--text3);">(una o varias — la suma es el total del recibo)</span></label>
+      <label class="btn bp btm" style="cursor:pointer;margin:0;">
+        ➕ Agregar XML
+        <input type="file" id="cc-xml-inp" accept=".xml" style="display:none;" onchange="ccAgregarFacturaXML(this)">
+      </label>
+    </div>
+    <div id="cc-facturas-lista" style="margin-bottom:10px;"></div>
+    <div style="text-align:right;font-size:12px;font-weight:700;color:var(--vino);padding:6px 10px;background:var(--vino-bg);border-radius:6px;" id="cc-facturas-total" style="display:none;"></div>
+  </div>
   <div class="fg" style="margin-top:10px;">
-    <!-- PDF y XML: aplica a todos -->
-    <div class="fi">
-      <label>PDF del comprobante <span style="font-size:10px;color:var(--text3);">(opcional)</span></label>
-      <input type="file" id="cc-pdf" accept=".pdf" style="margin-top:6px;">
-    </div>
-    <div class="fi">
-      <label>XML de factura SAT <span style="font-size:10px;color:var(--text3);">(opcional)</span></label>
-      <input type="file" id="cc-xml" accept=".xml" style="margin-top:6px;">
-    </div>
     <!-- Fotos: solo para GASTOS CON FACTURA -->
     <div class="fi full" id="cc-fotos-section">
       <label>Fotos de evidencia <span style="font-size:10px;color:var(--text3);">(solo gastos con factura)</span></label>
@@ -6225,7 +6228,7 @@ function ccAbrirGasto(s){
   document.getElementById("cc-monto").value="";
   var _ccdm=document.getElementById("cc-desc-modal"); if(_ccdm) _ccdm.value=s.descripcion||"";
   var _cpdf=document.getElementById("cc-pdf"); if(_cpdf) _cpdf.value="";
-  var _cxml=document.getElementById("cc-xml"); if(_cxml) _cxml.value="";
+  window._ccFacturas=[]; if(document.getElementById("cc-xml-inp")) document.getElementById("cc-xml-inp").value=""; ccRenderFacturas();
   document.getElementById("cc-fotos-preview").innerHTML="";
   // Mostrar/ocultar fotos según tipo de gasto de caja chica
   var _cfot=document.getElementById("cc-fotos-section");
@@ -6260,6 +6263,9 @@ function ccAbrirGasto(s){
   }
   document.getElementById("cc-fotos-preview").innerHTML="";
   document.getElementById("cc-obs").value="";
+  // Inicializar facturas múltiples
+  window._ccFacturas=[];
+  ccRenderFacturas();
   om("m-cc");
 }
 
@@ -6276,6 +6282,103 @@ function ccPreviewFotos(inp){
     };
     reader.readAsDataURL(f);
   });
+}
+
+
+// Facturas múltiples en Caja Chica
+window._ccFacturas = [];
+
+function ccAgregarFacturaXML(inp){
+  var file = inp.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var parser = new DOMParser();
+      var xml = parser.parseFromString(e.target.result, "text/xml");
+      var ns40 = "http://www.sat.gob.mx/cfd/4";
+      var ns33 = "http://www.sat.gob.mx/cfd/3";
+      function xEl(tag){
+        return xml.getElementsByTagNameNS(ns40,tag)[0]||
+               xml.getElementsByTagNameNS(ns33,tag)[0]||
+               xml.getElementsByTagName("cfdi:"+tag)[0]||
+               xml.getElementsByTagName(tag)[0];
+      }
+      var comp   = xEl("Comprobante");
+      if(!comp){toast("XML no válido","err");return;}
+      var emisor = xEl("Emisor");
+      var timbre = xml.getElementsByTagName("tfd:TimbreFiscalDigital")[0]||
+                   xml.getElementsByTagName("TimbreFiscalDigital")[0];
+      var uuid   = timbre?timbre.getAttribute("UUID"):"";
+      var serie  = comp.getAttribute("Serie")||"";
+      var folio  = comp.getAttribute("Folio")||"";
+      var folioDoc = uuid||(serie+folio)||folio;
+      var fecha  = (comp.getAttribute("Fecha")||"").slice(0,10);
+      var subtotal = parseFloat(comp.getAttribute("SubTotal")||0);
+      var total    = parseFloat(comp.getAttribute("Total")||0);
+      var rfc    = emisor?emisor.getAttribute("Rfc"):"";
+      var nombre = emisor?emisor.getAttribute("Nombre"):"";
+      // IEPS e IVA
+      var ieps=0, iva=0;
+      var traslados = xml.getElementsByTagName("cfdi:Traslado");
+      if(!traslados.length) traslados = xml.getElementsByTagName("Traslado");
+      for(var i=0;i<traslados.length;i++){
+        var cod = traslados[i].getAttribute("Impuesto")||"";
+        var imp = parseFloat(traslados[i].getAttribute("Importe")||0);
+        if(cod==="003") ieps+=imp;
+        else if(cod==="002") iva+=imp;
+      }
+      // Verificar duplicado
+      if(window._ccFacturas.some(function(f){return f.folio===folioDoc;})){
+        toast("Esta factura ya fue agregada","err"); return;
+      }
+      window._ccFacturas.push({
+        folio:folioDoc, fecha:fecha, rfc:rfc,
+        emisor:nombre, subtotal:subtotal, ieps:ieps, iva:iva, total:total,
+        archivo:file.name
+      });
+      inp.value="";
+      ccRenderFacturas();
+      toast("Factura agregada: "+folioDoc+" | "+fmt(total),"ok");
+    }catch(err){
+      toast("Error al leer XML: "+err.message,"err");
+    }
+  };
+  reader.readAsText(file,"UTF-8");
+}
+
+function ccRenderFacturas(){
+  var lista   = document.getElementById("cc-facturas-lista");
+  var totDiv  = document.getElementById("cc-facturas-total");
+  var montoEl = document.getElementById("cc-monto");
+  if(!lista) return;
+  var facts = window._ccFacturas||[];
+  if(!facts.length){
+    lista.innerHTML="<div style='font-size:11px;color:var(--text3);padding:6px 0;'>Sin facturas agregadas</div>";
+    if(totDiv) totDiv.textContent="";
+    return;
+  }
+  var total = facts.reduce(function(s,f){return s+f.total;},0);
+  lista.innerHTML = facts.map(function(f,i){
+    return "<div style='display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:4px;font-size:11px;'>"+
+      "<span style='font-weight:700;'>"+f.folio+"</span>"+
+      "<span style='color:var(--text2);'>"+f.fecha+"</span>"+
+      "<span style='flex:1;'>"+f.emisor+"</span>"+
+      "<span style='font-weight:700;color:var(--vino);'>"+fmt(f.total)+"</span>"+
+      "<button class='btn bd btm' style='padding:2px 7px;' onclick='ccEliminarFactura("+i+")'>✕</button>"+
+    "</div>";
+  }).join("");
+  if(totDiv){
+    totDiv.textContent = facts.length+" factura"+(facts.length>1?"s":" ")+" | Total: "+fmt(total);
+    totDiv.style.display="block";
+  }
+  // Auto-actualizar campo monto
+  if(montoEl) montoEl.value=total.toFixed(2);
+}
+
+function ccEliminarFactura(idx){
+  window._ccFacturas.splice(idx,1);
+  ccRenderFacturas();
 }
 
 function ccGuardar(){
@@ -6321,12 +6424,12 @@ function ccGuardar(){
 
   var tipoComp=document.getElementById("cc-tipo-comp").value;
   var obs=document.getElementById("cc-obs").value;
-  var pdfInp=document.getElementById("cc-pdf");
-  var xmlInp=document.getElementById("cc-xml");
   var fotosInp=document.getElementById("cc-fotos");
   var fotosFiles=Array.from(fotosInp.files);
-  var pdfNombre=pdfInp&&pdfInp.files[0]?pdfInp.files[0].name:"";
-  var xmlNombre=xmlInp&&xmlInp.files[0]?xmlInp.files[0].name:"";
+  // Facturas múltiples acumuladas
+  var ccFacturas=window._ccFacturas||[];
+  var xmlNombre=ccFacturas.length?ccFacturas.map(function(f){return f.folio;}).join(", "):"";
+  var pdfNombre="";
 
   function finalizarGuardado(fotos){
     var folio="CC-"+ccSolSel.folio.replace(/^SOL-/,"");
@@ -6337,9 +6440,10 @@ function ccGuardar(){
       area:ccSolSel.area,solicitante:ccSolSel.registrador,
       tipo:ccSolSel.tipoCajaChica||ccSolSel.tipo,descripcion:ccDescModal||ccSolSel.descripcion,
       beneficiario:ccSolSel.beneficiario||"",
-      monto:monto,tipoComp:tipoComp,
+      monto:ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto,
+      tipoComp:tipoComp,
       viaticos:datosViaticos,
-      pdf:pdfNombre,xml:xmlNombre,fotos:fotos,
+      pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,fotos:fotos,
       observaciones:obs,
       entregadoPor:SE.nombre,
       estado:"PAGADO",
