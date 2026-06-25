@@ -678,12 +678,7 @@ tr:last-child td{border-bottom:none;}
           <label>Nombre del Beneficiario / Donatario *</label>
           <input type="text" id="sben" placeholder="Nombre completo">
         </div>
-        <div class="fi" id="s-don-cc-div" style="display:none;margin-bottom:12px;">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-            <input type="checkbox" id="s-don-cc" style="width:18px;height:18px;accent-color:var(--vino);">
-            <span>Pago en efectivo (Caja Chica) — sin marcar va por Requisición</span>
-          </label>
-        </div>
+
         <div class="fi" id="sv-div" style="margin-bottom:12px;display:none;">
           <label>Vehículo *</label>
           <select id="sv-veh" onchange="onSVVeh()">
@@ -2302,12 +2297,12 @@ tr:last-child td{border-bottom:none;}
 
 
 <!-- MODAL: Editar Gasto Caja Chica -->
-<div class="mo" id="m-cc-edit"><div class="md">
+<div class="mo" id="m-cc-edit"><div class="md md-xl">
   <h2>✏️ Editar Gasto de Caja Chica<button class="mo-close" onclick="cm('m-cc-edit')">✕</button></h2>
   <input type="hidden" id="cced-id">
   <div class="fg">
     <div class="fi"><label>Fecha *</label><input type="date" id="cced-fecha"></div>
-    <div class="fi"><label>Monto *</label><input type="number" id="cced-monto" step="0.01" min="0"></div>
+    <div class="fi"><label>Monto entregado *</label><input type="number" id="cced-monto" step="0.01" min="0"></div>
     <div class="fi full"><label>Descripción *</label>
       <textarea id="cced-desc" rows="2"></textarea>
     </div>
@@ -2317,6 +2312,29 @@ tr:last-child td{border-bottom:none;}
     <div class="fi"><label>Observaciones</label>
       <input type="text" id="cced-obs" placeholder="Notas adicionales">
     </div>
+  </div>
+  <!-- Desglose Viáticos — solo visible si el gasto es de viáticos -->
+  <div id="cced-via-section" style="display:none;margin-top:14px;padding:14px;background:var(--vino-bg);border:1px solid #e8cfd3;border-left:3px solid var(--vino);border-radius:var(--radius-sm);">
+    <div class="ct" style="margin-bottom:10px;">Desglose de Viáticos</div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;">
+      <div class="fi" style="margin:0;"><label>Destino</label><input type="text" id="cced-via-destino"></div>
+      <div></div>
+      <div class="fi" style="margin:0;"><label>Motivo</label><input type="text" id="cced-via-motivo"></div>
+      <div></div>
+      <div class="fi" style="margin:0;"><label>Fecha salida</label><input type="date" id="cced-via-salida"></div>
+      <div></div>
+      <div class="fi" style="margin:0;"><label>Fecha regreso</label><input type="date" id="cced-via-regreso"></div>
+      <div></div>
+      <div class="fi" style="margin:0;"><label>Transporte</label><input type="number" id="cced-via-trans" step="0.01" min="0" value="0" oninput="ccedViaCalc()"></div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-top:18px;"><input type="checkbox" id="cced-via-trans-sf" style="accent-color:var(--vino);"> Sin factura</label>
+      <div class="fi" style="margin:0;"><label>Hospedaje</label><input type="number" id="cced-via-hosp" step="0.01" min="0" value="0" oninput="ccedViaCalc()"></div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-top:18px;"><input type="checkbox" id="cced-via-hosp-sf" style="accent-color:var(--vino);"> Sin factura</label>
+      <div class="fi" style="margin:0;"><label>Alimentos</label><input type="number" id="cced-via-alim" step="0.01" min="0" value="0" oninput="ccedViaCalc()"></div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-top:18px;"><input type="checkbox" id="cced-via-alim-sf" style="accent-color:var(--vino);"> Sin factura</label>
+    </div>
+    <div id="cced-via-otros-list" style="margin-top:8px;"></div>
+    <button class="btn bo btm" style="margin-top:6px;" onclick="ccedViaAgregarOtro()">+ Otro concepto</button>
+    <div style="text-align:right;font-size:12px;font-weight:700;color:var(--vino);margin-top:8px;" id="cced-via-total"></div>
   </div>
   <div class="mf">
     <button class="btn bo" onclick="cm('m-cc-edit')">Cancelar</button>
@@ -3897,10 +3915,6 @@ var COMB_VEHICULOS = [
 function onTS(){
   var t=document.getElementById("st").value;
   document.getElementById("sb-div").style.display=(TIPOS_BENEF_OBL.indexOf(t)>=0)?"block":"none";
-  var donDiv=document.getElementById("s-don-cc-div");
-  if(donDiv) donDiv.style.display=(t==="DONACIONES A TERCEROS")?"block":"none";
-  var donChk=document.getElementById("s-don-cc");
-  if(donChk&&t!=="DONACIONES A TERCEROS") donChk.checked=false;
   var esMtto=TIPOS_MTTO_VEH.indexOf(t)>=0;
   var svDiv=document.getElementById("sv-div");
   var svInfo=document.getElementById("sv-info");
@@ -3953,7 +3967,7 @@ function enviarSol(){
     tipo:t,
     descripcion:d,
     beneficiario:ben,
-    esCajaChica:t==="VIÁTICOS"||(t==="DONACIONES A TERCEROS"&&document.getElementById("s-don-cc")&&document.getElementById("s-don-cc").checked),
+    esCajaChica:t==="VIÁTICOS", // Para DONACIONES lo decide el Auxiliar al complementar
     vehiculo:(function(){
       if(TIPOS_MTTO_VEH.indexOf(t)>=0){
         var eco=parseInt((document.getElementById("sv-veh")||{value:""}).value)||0;
@@ -4806,6 +4820,11 @@ function abrirComp(id){
     +"<div class='fi full' style='flex-direction:row;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-sm);'>"
     +"<input type='checkbox' id='c-cajachica' "+chkCC+" onchange='toggleTipoCC()' style='width:18px;height:18px;accent-color:var(--vino);cursor:pointer;flex-shrink:0;'>"
     +"<div><label for='c-cajachica' style='cursor:pointer;font-weight:700;color:var(--vino);font-size:13px;text-transform:none;letter-spacing:0;'>Gasto de Caja Chica</label>"
+    +"<div style='font-size:11px;color:var(--text3);margin-top:2px;'>"
+    +(tipoSolAct==="DONACIONES A TERCEROS"
+      ?"Donaciones: marcar si el pago es en <b>efectivo</b> (caja chica), sin marcar va por <b>requisición/transferencia</b>"
+      :"Gastos menores que se pagan directamente de la caja chica de la Tesorería")
+    +"</div>"
     +"<div style='font-size:11px;color:var(--text3);margin-top:2px;'>Activa si el gasto se paga con fondo de caja chica (va directo a Entrega, sin Requisición)</div>"
     +"</div></div>"
     +"<div class='fi full' id='c-div-tipocc' style='display:"+(s.esCajaChica?"":"none")+";'>"
@@ -4880,6 +4899,13 @@ function onCompTipoSol(){
   if(lb) lb.innerHTML=(esDonac?"Donatario":"Beneficiario")+(esBenef?" <span style='color:var(--red);'>*</span>":"");
   if(ib) ib.placeholder=esDonac?"Nombre del donatario (obligatorio)":(esBenef?"Nombre del beneficiario (obligatorio)":"Si aplica");
   if(ib) ib.style.border=esBenef?"1.5px solid var(--gold)":"";
+  // Para DONACIONES mostrar hint en checkbox caja chica
+  var ccHint=document.querySelector("#c-cajachica + div div");
+  if(ccHint){
+    ccHint.innerHTML=esDonac
+      ?"Donaciones: marcar si el pago es en <b>efectivo</b> (caja chica), sin marcar va por <b>requisición/transferencia</b>"
+      :"Gastos menores que se pagan directamente de la caja chica de la Tesorería";
+  }
 }
 
 var compNombres=[];
@@ -7203,7 +7229,54 @@ function ccAbrirEditar(id){
   document.getElementById("cced-desc").value=g.descripcion||"";
   document.getElementById("cced-benef").value=g.beneficiario||"";
   document.getElementById("cced-obs").value=g.obs||"";
+  // Viáticos
+  var viaSection=document.getElementById("cced-via-section");
+  var esVia=!!(g.viaticos&&(g.viaticos.destino||g.viaticos.transporte!==undefined));
+  if(viaSection) viaSection.style.display=esVia?"block":"none";
+  if(esVia&&g.viaticos){
+    var v=g.viaticos;
+    document.getElementById("cced-via-destino").value=v.destino||"";
+    document.getElementById("cced-via-motivo").value=v.motivo||"";
+    document.getElementById("cced-via-salida").value=v.fechaSalida||"";
+    document.getElementById("cced-via-regreso").value=v.fechaRegreso||"";
+    document.getElementById("cced-via-trans").value=v.transporte||0;
+    document.getElementById("cced-via-hosp").value=v.hospedaje||0;
+    document.getElementById("cced-via-alim").value=v.alimentos||0;
+    document.getElementById("cced-via-trans-sf").checked=!!v.transporteSF;
+    document.getElementById("cced-via-hosp-sf").checked=!!v.hospedajeSF;
+    document.getElementById("cced-via-alim-sf").checked=!!v.alimentosSF;
+    // Otros conceptos
+    var otrosList=document.getElementById("cced-via-otros-list");
+    otrosList.innerHTML="";
+    (v.otros||[]).forEach(function(o){
+      ccedViaAgregarOtro(o.concepto,o.importe,o.sinFactura);
+    });
+    ccedViaCalc();
+  }
   om("m-cc-edit");
+}
+
+function ccedViaCalc(){
+  var t=parseFloat(document.getElementById("cced-via-trans").value)||0;
+  var h=parseFloat(document.getElementById("cced-via-hosp").value)||0;
+  var a=parseFloat(document.getElementById("cced-via-alim").value)||0;
+  var otros=0;
+  document.querySelectorAll("#cced-via-otros-list .cced-otro-imp").forEach(function(el){
+    otros+=parseFloat(el.value)||0;
+  });
+  var tot=t+h+a+otros;
+  var el=document.getElementById("cced-via-total");
+  if(el) el.textContent="Total desglose: "+fmt(tot);
+}
+
+function ccedViaAgregarOtro(concepto, importe, sf){
+  var div=document.createElement("div");
+  div.style.cssText="display:flex;gap:8px;align-items:center;margin-bottom:6px;";
+  div.innerHTML="<input type='text' class='cced-otro-conc' placeholder='Concepto' value='"+(concepto||"").replace(/'/g,"&#39;")+"' style='flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;'>"+
+    "<input type='number' class='cced-otro-imp' step='0.01' min='0' value='"+(importe||0)+"' oninput='ccedViaCalc()' style='width:110px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:right;'>"+
+    "<label style='display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;'><input type='checkbox' class='cced-otro-sf' "+(sf?"checked":"")+" style='accent-color:var(--vino);'> Sin fact.</label>"+
+    "<button class='btn bd btm' onclick='this.parentNode.remove();ccedViaCalc()' style='padding:4px 8px;'>✕</button>";
+  document.getElementById("cced-via-otros-list").appendChild(div);
 }
 
 function ccGuardarEditar(){
@@ -7214,18 +7287,39 @@ function ccGuardarEditar(){
   var benef=(document.getElementById("cced-benef").value||"").trim().toUpperCase();
   var obs=(document.getElementById("cced-obs").value||"").trim();
   if(!fecha||!monto||!desc){toast("Completa fecha, monto y descripción","err");return;}
+  // Leer desglose viáticos si aplica
+  var viaSection=document.getElementById("cced-via-section");
+  var viaticos=null;
+  if(viaSection&&viaSection.style.display!=="none"){
+    var otrosLista=[];
+    document.querySelectorAll("#cced-via-otros-list > div").forEach(function(row){
+      var c=(row.querySelector(".cced-otro-conc")||{value:""}).value.trim();
+      var imp=parseFloat((row.querySelector(".cced-otro-imp")||{value:0}).value)||0;
+      var sf=!!(row.querySelector(".cced-otro-sf")||{checked:false}).checked;
+      if(c||imp) otrosLista.push({concepto:c||"Otro",importe:imp,sinFactura:sf});
+    });
+    viaticos={
+      destino:document.getElementById("cced-via-destino").value,
+      motivo:document.getElementById("cced-via-motivo").value,
+      fechaSalida:document.getElementById("cced-via-salida").value,
+      fechaRegreso:document.getElementById("cced-via-regreso").value,
+      transporte:parseFloat(document.getElementById("cced-via-trans").value)||0,
+      transporteSF:document.getElementById("cced-via-trans-sf").checked,
+      hospedaje:parseFloat(document.getElementById("cced-via-hosp").value)||0,
+      hospedajeSF:document.getElementById("cced-via-hosp-sf").checked,
+      alimentos:parseFloat(document.getElementById("cced-via-alim").value)||0,
+      alimentosSF:document.getElementById("cced-via-alim-sf").checked,
+      otros:otrosLista
+    };
+  }
   var cc=getCajaChica();
   cc=cc.map(function(g){
     if(g.id!==id) return g;
-    return Object.assign({},g,{
-      fecha:fecha,
-      monto:monto,
-      montoEntregado:monto,
-      descripcion:desc,
-      beneficiario:benef||g.beneficiario,
-      obs:obs,
-      fechaModificacion:new Date().toISOString()
-    });
+    var upd={fecha:fecha,monto:monto,montoEntregado:monto,
+             descripcion:desc,beneficiario:benef||g.beneficiario,
+             obs:obs,fechaModificacion:new Date().toISOString()};
+    if(viaticos) upd.viaticos=viaticos;
+    return Object.assign({},g,upd);
   });
   setCajaChica(cc);
   toast("Gasto actualizado","ok");
