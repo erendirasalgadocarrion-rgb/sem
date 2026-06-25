@@ -1787,12 +1787,10 @@ tr:last-child td{border-bottom:none;}
     <div class="tw"><table>
       <thead><tr>
         <th>Folio CC</th><th>Fecha</th><th>Área</th><th>Solicitante</th>
-        <th>Tipo</th><th>Comprobación</th>
-        <th style="text-align:center;">PDF</th>
-        <th style="text-align:center;">XML</th>
-        <th style="text-align:center;">Fotos</th>
+        <th>Tipo</th>
+        <th style="text-align:center;">Docs</th>
         <th style="text-align:right;">Monto</th>
-        <th style="text-align:center;white-space:nowrap;width:1%;min-width:130px;">Acciones</th>
+        <th style="text-align:center;white-space:nowrap;width:1%;min-width:160px;">Acciones</th>
       </tr></thead>
       <tbody id="cc-hist-tbody"></tbody>
     </table></div>
@@ -6608,7 +6606,8 @@ function ccGuardar(){
       area:ccSolSel.area,solicitante:ccSolSel.registrador,
       tipo:ccSolSel.tipoCajaChica||ccSolSel.tipo,descripcion:ccDescModal||ccSolSel.descripcion,
       beneficiario:ccSolSel.beneficiario||"",
-      monto:ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto,
+      montoEntregado:monto,
+      monto:(tipoCC==="VIATICOS")?monto:(ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto),
       tipoComp:tipoComp,
       viaticos:datosViaticos,
       pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,pdfs:window._ccPDFs||[],credencial:window._ccCredencial||"",fotos:fotos,
@@ -6882,8 +6881,8 @@ function ccBuildRecibo(g){
     ):"")
     +"<div class='monto-box'>"
     +"<div class='monto-lbl'>Monto entregado</div>"
-    +"<div class='monto-num'>"+f(g.monto)+"</div>"
-    +"<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:6px;'>("+numLetra(g.monto)+")</div>"
+    +"<div class='monto-num'>"+f(g.viaticos?(g.montoEntregado||g.monto):g.monto)+"</div>"
+    +"<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:6px;'>("+numLetra(g.viaticos?(g.montoEntregado||g.monto):g.monto)+")</div>"
     +"</div>"
     +"<div class='firmas-pie'><div class='firmas-grid col4'>"
     +(esDonacion?"<div class='firma'><div class='linea'></div><div class='nombre'>"+(g.beneficiario||g.solicitante)+"</div><div class='cargo'>Donatario — Recibe</div></div>":("<div class='firma'><div class='linea'></div><div class='nombre'>"+(esBenef&&g.beneficiario?g.beneficiario:g.solicitante)+"</div><div class='cargo'>"+(esBenef&&g.beneficiario?"Beneficiario":g.area)+" — Recibe</div></div>"))
@@ -7024,29 +7023,30 @@ function rCCHist(){
   var tbody=document.getElementById("cc-hist-tbody");
   if(!tbody) return;
   tbody.innerHTML=cc.length?cc.map(function(g){
-    var tieneFactura=(g.tipo||"").toUpperCase().indexOf("FACTURA")>=0||(g.tipoComp||"").toUpperCase()==="FACTURA";
-    var badgePdf=g.pdf?'<span class="sb sc" style="font-size:10px;">✅</span>':'<span style="color:var(--text3);">—</span>';
-    var badgeXml=g.xml?'<span class="sb sc" style="font-size:10px;">✅</span>':'<span style="color:var(--text3);">—</span>';
-    var badgeFotos=!tieneFactura?'<span style="color:var(--text3);font-size:10px;">N/A</span>'
-      :(g.fotos&&g.fotos.length?'<span class="sb sc" style="font-size:10px;">'+g.fotos.length+'</span>':'<span style="color:var(--text3);">—</span>');
-    return "<tr>"
-      +"<td><b style='color:var(--vino);'>"+g.folio+"</b></td>"
+    var nDocs=0;
+    if(g.pdf) nDocs++;
+    if(g.facturas&&g.facturas.length) nDocs+=g.facturas.length; else if(g.xml) nDocs++;
+    if(g.pdfs&&g.pdfs.length) nDocs+=g.pdfs.length;
+    if(g.fotos&&g.fotos.length) nDocs+=g.fotos.length;
+    var badgeDocs=nDocs>0?'<span class="sb sc" style="font-size:10px;">'+ nDocs+' doc'+(nDocs>1?"s":"")+'</span>':'<span style="color:var(--text3);font-size:10px;">—</span>';
+    var esVia=!!(g.viaticos&&(g.viaticos.destino||g.viaticos.transporte));
+    var esCancelado=g.estado==="CANCELADO";
+    return "<tr style='"+(esCancelado?"opacity:.5;background:#fafafa;":"")+"'>"
+      +"<td><b style='color:var(--vino);'>"+g.folio+"</b>"+(esCancelado?" <span style='font-size:9px;color:#dc2626;font-weight:700;'>CANCELADO</span>":"")+"</td>"
       +"<td>"+g.fecha+"</td>"
       +"<td style='font-size:11px;'>"+g.area+"</td>"
       +"<td style='font-size:11px;'>"+g.solicitante+"</td>"
       +"<td style='font-size:11px;'>"+g.tipo+"</td>"
-      +"<td style='font-size:11px;'>"+g.tipoComp+"</td>"
-      +"<td style='text-align:center;'>"+badgePdf+"</td>"
-      +"<td style='text-align:center;'>"+badgeXml+"</td>"
-      +"<td style='text-align:center;'>"+badgeFotos+"</td>"
-      +"<td style='text-align:right;font-weight:700;color:var(--vino);'>"+fmt(g.monto)+"</td>"
-      +"<td style='text-align:center;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;'>"
-      +"<button class='btn bo btm' onclick=\"ccAbrirDocs('"+g.id+"')\">📎 Docs</button>"
-      +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️</button>"
-      +(g.viaticos?"<button class='btn bo btm' onclick=\"ccImprimirInformeViaticos('"+g.id+"')\">📑 Viáticos</button>":"")
-      +(SE&&SE.p&&SE.p.cfg?"<button class='btn bo btm' onclick=\"ccCancelarGasto('"+g.id+"')\">✕</button>"+"<button class='btn bd btm' onclick=\"ccEliminarGasto('"+g.id+"')\">🗑️</button>":"")
+      +"<td style='text-align:center;'>"+badgeDocs+"</td>"
+      +"<td style='text-align:right;font-weight:700;color:var(--vino);'>"+fmt(g.montoEntregado||g.monto)+"</td>"
+      +"<td style='text-align:center;white-space:nowrap;'>"
+      +"<button class='btn bo btm' onclick=\"ccAbrirDocs('"+g.id+"')\">📎</button> "
+      +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️ Recibo</button> "
+      +(esVia?"<button class='btn bo btm' onclick=\"ccImprimirInformeViaticos('"+g.id+"')\">📑</button> ":"")
+      +(!esCancelado&&SE&&SE.p&&SE.p.cfg?"<button class='btn bo btm' onclick=\"ccCancelarGasto('"+g.id+"')\">✕</button> ":"")
+      +(SE&&SE.p&&SE.p.cfg?"<button class='btn bd btm' onclick=\"ccEliminarGasto('"+g.id+"')\">🗑</button>":"")
       +"</td></tr>";
-  }).join(""):"<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:24px;'>No hay gastos registrados</td></tr>";
+  }).join(""):"<tr><td colspan='8' style='text-align:center;color:var(--text3);padding:24px;'>No hay gastos registrados</td></tr>";
 }
 
 
