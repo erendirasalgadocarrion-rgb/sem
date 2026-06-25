@@ -2300,6 +2300,30 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div>
 
+
+<!-- MODAL: Editar Gasto Caja Chica -->
+<div class="mo" id="m-cc-edit"><div class="md">
+  <h2>✏️ Editar Gasto de Caja Chica<button class="mo-close" onclick="cm('m-cc-edit')">✕</button></h2>
+  <input type="hidden" id="cced-id">
+  <div class="fg">
+    <div class="fi"><label>Fecha *</label><input type="date" id="cced-fecha"></div>
+    <div class="fi"><label>Monto *</label><input type="number" id="cced-monto" step="0.01" min="0"></div>
+    <div class="fi full"><label>Descripción *</label>
+      <textarea id="cced-desc" rows="2"></textarea>
+    </div>
+    <div class="fi"><label>Beneficiario / Donatario</label>
+      <input type="text" id="cced-benef" placeholder="Si aplica">
+    </div>
+    <div class="fi"><label>Observaciones</label>
+      <input type="text" id="cced-obs" placeholder="Notas adicionales">
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn bo" onclick="cm('m-cc-edit')">Cancelar</button>
+    <button class="btn bp" onclick="ccGuardarEditar()">💾 Guardar cambios</button>
+  </div>
+</div></div>
+
 </div><!-- fin #ac -->
   </div><!-- fin main-content -->
 </div><!-- fin app-layout -->
@@ -6994,8 +7018,8 @@ function ccBuildRecibo(g){
     ):"")
     +"<div class='monto-box'>"
     +"<div class='monto-lbl'>Monto entregado</div>"
-    +"<div class='monto-num'>"+f(g.viaticos?(g.montoEntregado||g.monto):g.monto)+"</div>"
-    +"<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:6px;'>("+numLetra(g.viaticos?(g.montoEntregado||g.monto):g.monto)+")</div>"
+    +"<div class='monto-num'>"+f(g.montoEntregado||g.monto)+"</div>"
+    +"<div style='font-size:11px;font-style:italic;color:#6b7280;margin-top:6px;'>("+numLetra(g.montoEntregado||g.monto)+")</div>"
     +"</div>"
     +"<div class='firmas-pie'><div class='firmas-grid col4'>"
     +(esDonacion?"<div class='firma'><div class='linea'></div><div class='nombre'>"+(g.beneficiario||g.solicitante)+"</div><div class='cargo'>Donatario — Recibe</div></div>":("<div class='firma'><div class='linea'></div><div class='nombre'>"+(esBenef&&g.beneficiario?g.beneficiario:g.solicitante)+"</div><div class='cargo'>"+(esBenef&&g.beneficiario?"Beneficiario":g.area)+" — Recibe</div></div>"))
@@ -7157,11 +7181,55 @@ function rCCHist(){
       +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️ Recibo</button> "
       +(esVia?"<button class='btn bo btm' onclick=\"ccImprimirInformeViaticos('"+g.id+"')\">📑</button> ":"")
       +(!esCancelado&&SE&&SE.p&&SE.p.cfg?"<button class='btn bo btm' onclick=\"ccCancelarGasto('"+g.id+"')\">✕</button> ":"")
+      +(!esCancelado&&!g.reembolsoId?"<button class='btn bw btm' onclick=\"ccAbrirEditar('"+g.id+"')\">✏️</button> ":"")
       +(SE&&SE.p&&SE.p.cfg?"<button class='btn bd btm' onclick=\"ccEliminarGasto('"+g.id+"')\">🗑</button>":"")
       +"</td></tr>";
   }).join(""):"<tr><td colspan='8' style='text-align:center;color:var(--text3);padding:24px;'>No hay gastos registrados</td></tr>";
 }
 
+
+
+function ccAbrirEditar(id){
+  var cc=getCajaChica();
+  var g=cc.filter(function(x){return x.id===id;})[0];
+  if(!g){toast("Gasto no encontrado","err");return;}
+  if(g.reembolsoId){toast("Este gasto ya fue incluido en un reembolso y no puede editarse","err");return;}
+  if(g.estado==="CANCELADO"){toast("No se puede editar un gasto cancelado","err");return;}
+  document.getElementById("cced-id").value=g.id;
+  document.getElementById("cced-fecha").value=g.fecha||"";
+  document.getElementById("cced-monto").value=g.montoEntregado||g.monto||"";
+  document.getElementById("cced-desc").value=g.descripcion||"";
+  document.getElementById("cced-benef").value=g.beneficiario||"";
+  document.getElementById("cced-obs").value=g.obs||"";
+  om("m-cc-edit");
+}
+
+function ccGuardarEditar(){
+  var id=document.getElementById("cced-id").value;
+  var fecha=document.getElementById("cced-fecha").value;
+  var monto=parseFloat(document.getElementById("cced-monto").value)||0;
+  var desc=(document.getElementById("cced-desc").value||"").trim();
+  var benef=(document.getElementById("cced-benef").value||"").trim().toUpperCase();
+  var obs=(document.getElementById("cced-obs").value||"").trim();
+  if(!fecha||!monto||!desc){toast("Completa fecha, monto y descripción","err");return;}
+  var cc=getCajaChica();
+  cc=cc.map(function(g){
+    if(g.id!==id) return g;
+    return Object.assign({},g,{
+      fecha:fecha,
+      monto:monto,
+      montoEntregado:monto,
+      descripcion:desc,
+      beneficiario:benef||g.beneficiario,
+      obs:obs,
+      fechaModificacion:new Date().toISOString()
+    });
+  });
+  setCajaChica(cc);
+  toast("Gasto actualizado","ok");
+  cm("m-cc-edit");
+  rCCHist();
+}
 
 function ccCancelarGasto(id){
   if(!confirm("¿Cancelar este gasto de Caja Chica? Quedará registrado como CANCELADO.")) return;
