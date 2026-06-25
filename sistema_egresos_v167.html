@@ -2062,7 +2062,7 @@ tr:last-child td{border-bottom:none;}
 
 <!-- CATÁLOGOS -->
 <div class="sec" id="sec-catalogos">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Catálogos</h3><p>Administración de fondos y programas presupuestales</p></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Catálogos</h3><p>Administración de fondos y programas presupuestales</p></div><div style="display:flex;gap:8px;"><button class="btn bgold" onclick="migrarDatos()" title="Subir datos locales a Supabase">☁️ Migrar a Supabase</button><button class="btn bo" onclick="pullFromSupabase().then(function(n){toast(n+' registros descargados','ok');uBadges();})" title="Descargar datos de Supabase">⬇️ Sync</button><button class="btn bd" onclick="limpiarTodosLosDatos()" title="Borra todos los datos locales">🗑️ Limpiar datos</button></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
     <div class="card">
       <div class="ct" style="justify-content:space-between;"><span class="ct-left">Fondos</span><button class="btn bp btm" onclick="om('m-fondo')">Agregar</button></div>
