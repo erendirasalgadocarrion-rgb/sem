@@ -7039,8 +7039,49 @@ function rCCHist(){
       +"<td style='text-align:center;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;'>"
       +"<button class='btn bo btm' onclick=\"ccAbrirDocs('"+g.id+"')\">📎 Docs</button>"
       +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️</button>"
+      +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️</button>"
+      +(SE&&SE.p&&SE.p.cfg?"<button class='btn bo btm' onclick=\"ccCancelarGasto('"+g.id+"')\">✕</button>"+"<button class='btn bd btm' onclick=\"ccEliminarGasto('"+g.id+"')\">🗑️</button>":"")
       +"</td></tr>";
   }).join(""):"<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:24px;'>No hay gastos registrados</td></tr>";
+}
+
+
+function ccCancelarGasto(id){
+  if(!confirm("¿Cancelar este gasto de Caja Chica? Quedará registrado como CANCELADO.")) return;
+  var cc=getCajaChica();
+  cc=cc.map(function(g){
+    return g.id===id?Object.assign({},g,{estado:"CANCELADO",fechaCancelacion:new Date().toISOString()}):g;
+  });
+  setCajaChica(cc);
+  // Revertir solicitud a COMPLEMENTADO para que pueda re-procesarse
+  var sols=getSols();
+  var gasto=getCajaChica().filter(function(g){return g.id===id;})[0];
+  if(gasto){
+    sols=sols.map(function(s){
+      return s.id===gasto.solId?Object.assign({},s,{estado:"COMPLEMENTADO"}):s;
+    });
+    setSols(sols);
+  }
+  toast("Gasto cancelado","ok");
+  rCCHist();
+}
+
+function ccEliminarGasto(id){
+  if(!confirm("¿ELIMINAR PERMANENTEMENTE este gasto de Caja Chica? Esta acción no se puede deshacer.")) return;
+  var cc=getCajaChica();
+  var gasto=cc.filter(function(g){return g.id===id;})[0];
+  setCajaChica(cc.filter(function(g){return g.id!==id;}));
+  // Revertir solicitud a COMPLEMENTADO
+  if(gasto){
+    var sols=getSols();
+    sols=sols.map(function(s){
+      return s.id===gasto.solId?Object.assign({},s,{estado:"COMPLEMENTADO"}):s;
+    });
+    setSols(sols);
+  }
+  toast("Gasto eliminado","ok");
+  rCCHist();
+  uBadges();
 }
 
 function ccHistLimpiar(){
