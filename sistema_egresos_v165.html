@@ -6670,6 +6670,7 @@ function ccViaAgregarOtro(concepto,importe){
   div.innerHTML=
     "<input type='text' placeholder='Concepto (ej. Taxis, Estacionamiento)' value='"+(concepto||"").replace(/'/g,"&#39;")+"' style='flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;' oninput=\"ccViaCalcTotal()\">"
     +"<input type='number' step='0.01' min='0' value='"+(importe||0)+"' style='width:120px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:right;' oninput=\"ccViaCalcTotal()\">"
+    +"<label style='display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;cursor:pointer;padding:0 4px;'>"+"<input type='checkbox' class='cvo-sf' style='accent-color:var(--vino);width:14px;height:14px;cursor:pointer;'>Sin fact.</label>"
     +"<button type='button' class='btn bd btm' style='padding:5px 10px;' onclick=\"ccViaEliminarOtro('"+rid+"')\">✕</button>";
   document.getElementById("cc-via-otros-list").appendChild(div);
   ccViaCalcTotal();
@@ -6686,7 +6687,7 @@ function ccViaGetOtros(){
   var lista=[];
   rows.forEach(function(row){
     var inputs=row.querySelectorAll("input[type='text'],input[type='number']");
-    var chk=row.querySelector("input[type='checkbox']");
+    var chk=row.querySelector("input.cvo-sf");
     var concepto=(inputs[0]?inputs[0].value:"").trim();
     var importe=parseFloat(inputs[1]?inputs[1].value:0)||0;
     if(concepto||importe) lista.push({concepto:concepto||"Otro",importe:importe,sinFactura:chk?chk.checked:false});
@@ -7042,7 +7043,7 @@ function rCCHist(){
       +"<td style='text-align:center;display:flex;gap:4px;justify-content:center;flex-wrap:wrap;'>"
       +"<button class='btn bo btm' onclick=\"ccAbrirDocs('"+g.id+"')\">📎 Docs</button>"
       +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️</button>"
-      +"<button class='btn bgold btm' onclick=\"ccImprimirRecibo('"+g.solId+"')\">🖨️</button>"
+      +(g.viaticos?"<button class='btn bo btm' onclick=\"ccImprimirInformeViaticos('"+g.id+"')\">📑 Viáticos</button>":"")
       +(SE&&SE.p&&SE.p.cfg?"<button class='btn bo btm' onclick=\"ccCancelarGasto('"+g.id+"')\">✕</button>"+"<button class='btn bd btm' onclick=\"ccEliminarGasto('"+g.id+"')\">🗑️</button>":"")
       +"</td></tr>";
   }).join(""):"<tr><td colspan='11' style='text-align:center;color:var(--text3);padding:24px;'>No hay gastos registrados</td></tr>";
@@ -7085,6 +7086,14 @@ function ccEliminarGasto(id){
   toast("Gasto eliminado","ok");
   rCCHist();
   uBadges();
+}
+
+
+function ccImprimirInformeViaticos(id){
+  var cc=getCajaChica();
+  var g=null;for(var i=0;i<cc.length;i++){if(cc[i].id===id){g=cc[i];break;}}
+  if(!g||!g.viaticos){toast("Sin datos de viáticos","err");return;}
+  rqAbrirVentana(ccBuildInformeViaticos(g));
 }
 
 function ccHistLimpiar(){
