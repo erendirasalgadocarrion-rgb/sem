@@ -3221,6 +3221,7 @@ var NAV = [
     id:"cajachica", icon:"💵", label:"Caja Chica",
     items:[
       {id:"sec-cc-nuevo",  icon:"➕", label:"Nuevo Vale de Caja", perm:"cc", bdg:""},
+      {id:"sec-cc-hist",   icon:"📂", label:"Historial",          perm:"cc", bdg:""},
       {id:"sec-cc-arqueo", icon:"📊", label:"Arqueo",             perm:"cc", bdg:""},
     ]
   },
@@ -3516,6 +3517,7 @@ var BREADCRUMBS={
   "sec-aprobaciones":    {parent:"Solicitudes",            child:"Autorizar"},
   "sec-historial":       {parent:"Solicitudes",            child:"Visualizar"},
   "sec-cc-nuevo":        {parent:"Caja Chica",             child:"Nuevo Vale de Caja"},
+  "sec-cc-hist":         {parent:"Caja Chica",             child:"Historial"},
   "sec-cc-arqueo":       {parent:"Caja Chica",             child:"Arqueo"},
   "sec-pag-ordenes":     {parent:"Pagos",                  child:"Emitir Orden de Pago"},
   "sec-pag-cxp":         {parent:"Pagos",                  child:"Cuentas por Pagar"},
@@ -3706,6 +3708,7 @@ function showSec(id,el){
   if(id==="sec-pag-cxp")      rPagCxP();
   if(id==="sec-pag-hist")     rPagHist();
   if(id==="sec-cc-nuevo")     rCCNuevo();
+  if(id==="sec-cc-hist")      rCCHist();
   if(id==="sec-cc-arqueo")    rArqueo();
   if(id==="sec-comb-xml")      { cxmlInitPeriodos(); }
   if(id==="sec-comb-bitacora") { cbitInitFiltros(); cbitCargarLineas(); }
