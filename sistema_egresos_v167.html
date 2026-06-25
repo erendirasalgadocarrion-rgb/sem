@@ -10729,4 +10729,19 @@ function compVerOC(ordId){
 }
 </script>
 </body>
-</html>
+</html
+function limpiarTodosLosDatos(){
+  if(!confirm("⚠️ ADVERTENCIA\n\nEsto borrará TODOS los datos del sistema en este navegador:\n- Solicitudes\n- Requisiciones\n- Órdenes de compra\n- Caja Chica\n- Combustible\n- Mantenimiento\n\n¿Estás seguro?")) return;
+  if(!confirm("¿CONFIRMAS que quieres borrar todos los datos? Esta acción no se puede deshacer.")) return;
+  var claves = [
+    "egresos_sols","egresos_reqs","egresos_ords","egresos_comps",
+    "egresos_pagos","egresos_cc","egresos_fondos","egresos_progs",
+    "egresos_reembolsos","egresos_bits","egresos_auditoria","egresos_folio",
+    "comb_facturas","mtto_bitacora","cc9l"
+  ];
+  claves.forEach(function(k){ localStorage.removeItem(k); });
+  toast("✅ Todos los datos han sido eliminados. Recarga la página.", "ok");
+  setTimeout(function(){ location.reload(); }, 2000);
+}
+
+>
