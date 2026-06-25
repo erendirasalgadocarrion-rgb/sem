@@ -6657,8 +6657,8 @@ function ccRenderFacturas(){
     totDiv.textContent = facts.length+" factura"+(facts.length>1?"s":" ")+" | Total: "+fmt(total);
     totDiv.style.display="block";
   }
-  // Auto-actualizar campo monto
-  if(montoEl) montoEl.value=total.toFixed(2);
+  // NO sobreescribir cc-monto — el usuario captura el monto entregado manualmente
+  // Las facturas son documentos de soporte, no definen el monto entregado
 }
 
 function ccEliminarFactura(idx){
@@ -6744,7 +6744,9 @@ function ccGuardar(){
       tipo:ccSolSel.tipoCajaChica||ccSolSel.tipo,descripcion:ccDescModal||ccSolSel.descripcion,
       beneficiario:ccSolSel.beneficiario||"",
       montoEntregado:monto,
-      monto:(tipoCC==="VIATICOS")?monto:(ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto),
+      // monto = suma de facturas (para conciliación contable)
+      // montoEntregado = lo que capturó el usuario (va en el recibo)
+      monto:ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto,
       tipoComp:tipoComp,
       viaticos:datosViaticos,
       pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,pdfs:window._ccPDFs||[],credencial:window._ccCredencial||"",fotos:fotos,
