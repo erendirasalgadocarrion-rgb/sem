@@ -1633,10 +1633,20 @@ tr:last-child td{border-bottom:none;}
       <div class="fi"><label>Días de viaje</label><input type="number" id="cc-via-dias" readonly></div>
     </div>
     <div style="font-size:11px;font-weight:700;color:var(--vino);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;padding-top:10px;border-top:1px dashed #e8cfd3;">Desglose del Viático</div>
-    <div class="fg">
-      <div class="fi"><label>Transporte</label><input type="number" id="cc-via-transporte" step="0.01" min="0" value="0" oninput="ccViaCalcTotal()"></div>
-      <div class="fi"><label>Hospedaje</label><input type="number" id="cc-via-hospedaje" step="0.01" min="0" value="0" oninput="ccViaCalcTotal()"></div>
-      <div class="fi"><label>Alimentos</label><input type="number" id="cc-via-alimentos" step="0.01" min="0" value="0" oninput="ccViaCalcTotal()"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Marca <b>Sin factura</b> en los conceptos que no tengan comprobante.</div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;">
+      <div class="fi" style="margin:0;"><label>Transporte</label><input type="number" id="cc-via-transporte" step="0.01" min="0" value="0" oninput="ccViaCalcTotal()"></div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap;margin-top:18px;">
+        <input type="checkbox" id="cc-via-trans-sf" style="accent-color:var(--vino);"> Sin factura
+      </label>
+      <div class="fi" style="margin:0;"><label>Hospedaje</label><input type="number" id="cc-via-hospedaje" step="0.01" min="0" value="0" oninput="ccViaCalcTotal()"></div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap;margin-top:18px;">
+        <input type="checkbox" id="cc-via-hosp-sf" style="accent-color:var(--vino);"> Sin factura
+      </label>
+      <div class="fi" style="margin:0;"><label>Alimentos</label><input type="number" id="cc-via-alimentos" step="0.01" min="0" value="0" oninput="ccViaCalcTotal()"></div>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;white-space:nowrap;margin-top:18px;">
+        <input type="checkbox" id="cc-via-alim-sf" style="accent-color:var(--vino);"> Sin factura
+      </label>
     </div>
     <!-- Filas dinámicas de Otros conceptos -->
     <div id="cc-via-otros-list" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
@@ -1675,6 +1685,18 @@ tr:last-child td{border-bottom:none;}
       <label>Fotos de evidencia <span style="font-size:10px;color:var(--text3);">(solo gastos con factura)</span></label>
       <input type="file" id="cc-fotos" accept="image/*" multiple style="margin-top:6px;" onchange="ccPreviewFotos(this)">
       <div id="cc-fotos-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+    </div>
+    <div class="fi full" id="cc-credencial-section" style="display:none;">
+      <label style="font-weight:700;color:var(--vino);">Credencial de Elector del Beneficiario *
+        <span style="font-size:10px;font-weight:400;color:var(--text3);">(obligatorio para Apoyos y Donaciones)</span>
+      </label>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+        <label class="btn bo btm" style="cursor:pointer;margin:0;">
+          📋 Adjuntar credencial
+          <input type="file" id="cc-credencial-inp" accept="image/*,.pdf" style="display:none;" onchange="ccAgregarCredencial(this)">
+        </label>
+        <span id="cc-credencial-nombre" style="font-size:11px;color:var(--text2);">Sin archivo</span>
+      </div>
     </div>
     <div class="fi full">
       <label>Observaciones</label>
@@ -2763,7 +2785,9 @@ function repMostrarPanel(id, tipo, compId, ordId){
       var tieneVB=sol.aprobadoPor||sol.estado==="APROBADO"||sol.estado==="COMPLEMENTADO"||sol.estado==="COMPLETADO";
       g1.push(tlItem("✅","Visto Bueno",sol.folio,tieneVB,"vb",sol.id,!req&&!ord));
     }
-    if(cc) g1.push(tlItem("💵","Recibo Caja Chica",cc.folio,true,"cc",cc.id,!cc.facturas&&!cc.fotos));
+    var esViaRep=cc&&(cc.tipo==="VIATICOS"||(cc.viaticos&&Object.keys(cc.viaticos).length>0));
+    if(cc) g1.push(tlItem("💵","Recibo Caja Chica",cc.folio,true,"cc",cc.id,!esViaRep&&!cc.facturas&&!cc.fotos));
+    if(esViaRep) g1.push(tlItem("📑","Informe de Viáticos",cc.folio,true,"cc-via",cc.id,!cc.facturas&&!cc.fotos));
     grupos.push(tlGroup("01 — Solicitud",g1));
   }
   // GRUPO CC: Evidencia de Caja Chica
@@ -2917,6 +2941,11 @@ function repImpr(tipo, id){
         toast("Sin facturas XML registradas","err");
       }
     }
+  } else if(tipo==="cc-via"){
+    var ccV=getCajaChica();
+    var gV=null;for(var i=0;i<ccV.length;i++){if(ccV[i].id===id){gV=ccV[i];break;}}
+    if(gV&&gV.viaticos) rqAbrirVentana(ccBuildInformeViaticos(gV));
+    else toast("Sin datos de viáticos","err");
   } else if(tipo==="cc-foto"){
     var cc3=getCajaChica();
     var g3=null;for(var i=0;i<cc3.length;i++){if(cc3[i].id===id){g3=cc3[i];break;}}
@@ -6318,7 +6347,7 @@ function ccAbrirGasto(s){
   document.getElementById("cc-monto").value="";
   var _ccdm=document.getElementById("cc-desc-modal"); if(_ccdm) _ccdm.value=s.descripcion||"";
   var _cpdf=document.getElementById("cc-pdf"); if(_cpdf) _cpdf.value="";
-  window._ccFacturas=[]; window._ccPDFs=[]; if(document.getElementById("cc-xml-inp")) document.getElementById("cc-xml-inp").value=""; if(document.getElementById("cc-pdf-inp")) document.getElementById("cc-pdf-inp").value=""; ccRenderFacturas();
+  window._ccFacturas=[]; window._ccPDFs=[]; window._ccCredencial=""; if(document.getElementById("cc-xml-inp")) document.getElementById("cc-xml-inp").value=""; if(document.getElementById("cc-pdf-inp")) document.getElementById("cc-pdf-inp").value=""; if(document.getElementById("cc-credencial-inp")) document.getElementById("cc-credencial-inp").value=""; if(document.getElementById("cc-credencial-nombre")) document.getElementById("cc-credencial-nombre").textContent="Sin archivo"; ccRenderFacturas();
   document.getElementById("cc-fotos-preview").innerHTML="";
   // Mostrar/ocultar fotos según tipo de gasto de caja chica
   var _cfot=document.getElementById("cc-fotos-section");
@@ -6336,6 +6365,9 @@ function ccAbrirGasto(s){
     ["cc-via-transporte","cc-via-hospedaje","cc-via-alimentos"].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value="0";
     });
+    ["cc-via-trans-sf","cc-via-hosp-sf","cc-via-alim-sf"].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.checked=false;
+    });
     document.getElementById("cc-via-otros-list").innerHTML="";
     document.getElementById("cc-via-reintegro-row").style.display="none";
     window._ccViaExcede=false;
@@ -6351,6 +6383,10 @@ function ccAbrirGasto(s){
   } else {
     tipoComp.value="FACTURA";
   }
+  // Mostrar/ocultar credencial de elector
+  var _credSec=document.getElementById("cc-credencial-section");
+  if(_credSec) _credSec.style.display=
+    (_tipoCC==="APOYO ECONOMICO"||_tipoCC==="APOYOS ECONOMICOS"||_tipoCC==="DONACIONES A TERCEROS")?"block":"none";
   document.getElementById("cc-fotos-preview").innerHTML="";
   document.getElementById("cc-obs").value="";
   // Inicializar facturas múltiples
@@ -6497,6 +6533,16 @@ function ccEliminarPDF(idx){
   ccRenderFacturas();
 }
 
+
+function ccAgregarCredencial(inp){
+  var file=inp.files[0];
+  if(!file) return;
+  var nombreEl=document.getElementById("cc-credencial-nombre");
+  if(nombreEl) nombreEl.textContent=file.name;
+  // Guardar nombre para el gasto
+  window._ccCredencial=file.name;
+}
+
 function ccGuardar(){
   if(!ccSolSel){toast("No hay solicitud seleccionada","err");return;}
   var fecha=document.getElementById("cc-fecha").value;
@@ -6531,8 +6577,11 @@ function ccGuardar(){
       fechaSalida:viaSalida,fechaRegreso:viaRegreso,
       dias:parseInt(document.getElementById("cc-via-dias").value)||0,
       transporte:transporteV,
+      transporteSF:!!(document.getElementById("cc-via-trans-sf")&&document.getElementById("cc-via-trans-sf").checked),
       hospedaje:hospedajeV,
+      hospedajeSF:!!(document.getElementById("cc-via-hosp-sf")&&document.getElementById("cc-via-hosp-sf").checked),
       alimentos:alimentosV,
+      alimentosSF:!!(document.getElementById("cc-via-alim-sf")&&document.getElementById("cc-via-alim-sf").checked),
       otros:otrosLista,
       reintegro:reintegroV>0.01?reintegroV:0
     };
@@ -6559,7 +6608,7 @@ function ccGuardar(){
       monto:ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto,
       tipoComp:tipoComp,
       viaticos:datosViaticos,
-      pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,pdfs:window._ccPDFs||[],fotos:fotos,
+      pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,pdfs:window._ccPDFs||[],credencial:window._ccCredencial||"",fotos:fotos,
       observaciones:obs,
       entregadoPor:SE.nombre,
       estado:"PAGADO",
@@ -6633,10 +6682,11 @@ function ccViaGetOtros(){
   var rows=document.querySelectorAll("#cc-via-otros-list > div");
   var lista=[];
   rows.forEach(function(row){
-    var inputs=row.querySelectorAll("input");
+    var inputs=row.querySelectorAll("input[type='text'],input[type='number']");
+    var chk=row.querySelector("input[type='checkbox']");
     var concepto=(inputs[0]?inputs[0].value:"").trim();
     var importe=parseFloat(inputs[1]?inputs[1].value:0)||0;
-    if(concepto||importe) lista.push({concepto:concepto||"Otro",importe:importe});
+    if(concepto||importe) lista.push({concepto:concepto||"Otro",importe:importe,sinFactura:chk?chk.checked:false});
   });
   return lista;
 }
@@ -6679,6 +6729,92 @@ function ccActualizarLetra(){
   var monto=parseFloat((document.getElementById("cc-monto")||{value:0}).value)||0;
   var el=document.getElementById("cc-monto-letra");
   if(el) el.textContent=monto>0?"("+numLetra(monto)+")":"";
+}
+
+
+/** Genera el Informe de Viáticos con desglose con/sin factura */
+function ccBuildInformeViaticos(g){
+  var logo = getLogo();
+  var v = g.viaticos||{};
+  var conceptos = [];
+  function addC(nombre, importe, sf){
+    if(parseFloat(importe||0)>0) conceptos.push({nombre:nombre, importe:parseFloat(importe||0), sf:!!sf});
+  }
+  addC("Transporte",  v.transporte,  v.transporteSF);
+  addC("Hospedaje",   v.hospedaje,   v.hospedajeSF);
+  addC("Alimentos",   v.alimentos,   v.alimentosSF);
+  (v.otros||[]).forEach(function(o){ addC(o.concepto||"Otro", o.importe, o.sinFactura); });
+
+  var conFact  = conceptos.filter(function(c){return !c.sf;});
+  var sinFact  = conceptos.filter(function(c){return  c.sf;});
+  var totCF    = conFact.reduce(function(s,c){return s+c.importe;},0);
+  var totSF    = sinFact.reduce(function(s,c){return s+c.importe;},0);
+  var totGen   = totCF + totSF;
+
+  function tablaConceptos(lista){
+    if(!lista.length) return "<tr><td colspan='2' style='color:#6b7280;font-style:italic;'>Sin conceptos</td></tr>";
+    return lista.map(function(c){
+      return "<tr><td style='padding:5px 10px;'>"+c.nombre+"</td>"+
+             "<td style='padding:5px 10px;text-align:right;font-weight:600;'>"+fmt(c.importe)+"</td></tr>";
+    }).join("");
+  }
+
+  var leyendaSF = sinFact.length
+    ? "<div style='margin-top:20px;padding:14px;border:1px solid #d1d5db;border-left:3px solid #6B0F1A;border-radius:6px;font-size:10px;line-height:1.7;font-style:italic;color:#374151;'>"+
+      "<b style='font-style:normal;text-transform:uppercase;font-size:9px;letter-spacing:.5px;color:#6B0F1A;'>Declaración bajo protesta de decir verdad</b><br>"+
+      "DECLARO BAJO PROTESTA DE DECIR VERDAD Y DE CONFORMIDAD A LO PREVISTO EN LA LEY DE RESPONSABILIDADES PARA SERVIDORES PÚBLICOS, QUE LA RELACIÓN DE GASTOS QUE PRESENTO SE REFIERE A EROGACIONES REALIZADAS EN EL DESEMPEÑO DE LA COMISIÓN QUE SE MENCIONA Y QUE POR MOTIVOS DE FUERZA MAYOR NO FUE POSIBLE RECABAR LA DOCUMENTACIÓN COMPROBATORIA CORRESPONDIENTE"+
+      "</div>" : "";
+
+  return "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Informe de Viáticos "+g.folio+"</title>"+
+    "<style>"+
+    "body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#1a1a1a;}"+
+    "h1{font-size:14px;margin:0;}h2{font-size:13px;margin:4px 0;}"+
+    "table{width:100%;border-collapse:collapse;margin-bottom:10px;}"+
+    "th{background:#6B0F1A;color:#fff;padding:6px 10px;text-align:left;font-size:10px;}"+
+    "td{padding:4px 10px;border-bottom:1px solid #f0f0f0;font-size:10px;}"+
+    ".tot td{font-weight:700;background:#f5e8ea;border-top:2px solid #6B0F1A;}"+
+    ".firmas{display:flex;gap:24px;margin-top:40px;}"+
+    ".firma{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:10px;}"+
+    "@media print{body{margin:8px;}}"+
+    "</style></head><body>"+
+    "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:14px;'>"+
+    "<h1>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+    "<h2>Tesorería Municipal — Informe de Viáticos</h2>"+
+    "<p style='margin:3px 0;font-size:11px;'>Ejercicio Fiscal 2026</p></div>"+
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#fdf2f4;border:1px solid #e8cfd3;border-radius:6px;padding:10px;margin-bottom:14px;font-size:11px;'>"+
+    "<div><b>Folio:</b> "+g.folio+"</div>"+
+    "<div><b>Fecha:</b> "+g.fecha+"</div>"+
+    "<div><b>Comisionado:</b> "+g.solicitante+"</div>"+
+    "<div><b>Área:</b> "+g.area+"</div>"+
+    "<div><b>Destino:</b> "+(v.destino||"—")+"</div>"+
+    "<div><b>Motivo:</b> "+(v.motivo||"—")+"</div>"+
+    "<div><b>Fecha salida:</b> "+(v.fechaSalida||"—")+"</div>"+
+    "<div><b>Fecha regreso:</b> "+(v.fechaRegreso||"—")+" ("+( v.dias||0)+" días)</div>"+
+    "</div>"+
+    "<div style='display:grid;grid-template-columns:1fr 1fr;gap:16px;'>"+
+    "<div>"+
+    "<div style='font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;margin-bottom:6px;'>✅ Gastos con comprobante</div>"+
+    "<table><thead><tr><th>Concepto</th><th style='text-align:right;'>Importe</th></tr></thead>"+
+    "<tbody>"+tablaConceptos(conFact)+"</tbody>"+
+    "<tfoot><tr class='tot'><td>Subtotal</td><td style='text-align:right;'>"+fmt(totCF)+"</td></tr></tfoot>"+
+    "</table></div>"+
+    "<div>"+
+    "<div style='font-size:11px;font-weight:700;color:#c05621;text-transform:uppercase;margin-bottom:6px;'>⚠️ Gastos sin comprobante</div>"+
+    "<table><thead><tr><th>Concepto</th><th style='text-align:right;'>Importe</th></tr></thead>"+
+    "<tbody>"+tablaConceptos(sinFact)+"</tbody>"+
+    "<tfoot><tr class='tot'><td>Subtotal</td><td style='text-align:right;'>"+fmt(totSF)+"</td></tr></tfoot>"+
+    "</table></div>"+
+    "</div>"+
+    "<table style='margin-top:10px;'><tfoot>"+
+    "<tr class='tot'><td style='font-size:13px;'>TOTAL VIÁTICOS</td><td style='text-align:right;font-size:13px;'>"+fmt(totGen)+"</td></tr>"+
+    (v.reintegro?"<tr><td style='color:#78350f;'>Reintegro a Caja Chica</td><td style='text-align:right;color:#78350f;'>"+fmt(v.reintegro)+"</td></tr>":"")+" "+
+    "</tfoot></table>"+
+    leyendaSF+
+    "<div class='firmas'>"+
+    "<div class='firma'>___________________________<br>"+g.solicitante+"<br>Comisionado</div>"+
+    "<div class='firma'>___________________________<br>CP. ALICIA HUERVO DÍAZ<br>Tesorera Municipal</div>"+
+    "<div class='firma'>___________________________<br>LIC. ERENDIRA SALGADO CARRIÓN<br>Titular OIC</div>"+
+    "</div></body></html>";
 }
 
 function ccBuildRecibo(g){
