@@ -1655,10 +1655,16 @@ tr:last-child td{border-bottom:none;}
     <!-- MULTI-FACTURAS -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <label style="font-weight:700;font-size:12px;color:var(--vino);">Facturas de soporte <span style="font-size:10px;font-weight:400;color:var(--text3);">(una o varias — la suma es el total del recibo)</span></label>
-      <label class="btn bp btm" style="cursor:pointer;margin:0;">
-        ➕ Agregar XML
-        <input type="file" id="cc-xml-inp" accept=".xml" style="display:none;" onchange="ccAgregarFacturaXML(this)">
-      </label>
+      <div style="display:flex;gap:6px;">
+        <label class="btn bp btm" style="cursor:pointer;margin:0;">
+          📂 XML
+          <input type="file" id="cc-xml-inp" accept=".xml" style="display:none;" onchange="ccAgregarFacturaXML(this)">
+        </label>
+        <label class="btn bo btm" style="cursor:pointer;margin:0;">
+          📄 PDF
+          <input type="file" id="cc-pdf-inp" accept=".pdf" style="display:none;" onchange="ccAgregarFacturaPDF(this)">
+        </label>
+      </div>
     </div>
     <div id="cc-facturas-lista" style="margin-bottom:10px;"></div>
     <div style="text-align:right;font-size:12px;font-weight:700;color:var(--vino);padding:6px 10px;background:var(--vino-bg);border-radius:6px;" id="cc-facturas-total" style="display:none;"></div>
@@ -2625,6 +2631,40 @@ function repVolver(){
   var ac=document.getElementById("ac"); if(ac) ac.scrollTop=0;
 }
 
+
+/** Genera el reporte fotográfico de un gasto de Caja Chica */
+function ccBuildReporteFotos(gasto){
+  var logo=getLogo();
+  var fotos=gasto.fotos||[];
+  if(!fotos.length) return "<html><body>Sin fotos</body></html>";
+  var pares=[];
+  for(var i=0;i<fotos.length;i+=2) pares.push([fotos[i],fotos[i+1]||null]);
+  var fotosHtml=pares.map(function(par){
+    function fotoEl(src){
+      return src
+        ?"<img src='"+src+"' style='width:100%;max-height:320px;object-fit:contain;border:1px solid #e8cfd3;border-radius:8px;'>"
+        :"<div style='height:280px;border:1px dashed #e8cfd3;border-radius:8px;'></div>";
+    }
+    return "<div style='display:flex;gap:16px;margin-bottom:16px;'>"+
+      "<div style='flex:1;'>"+fotoEl(par[0])+"</div>"+
+      "<div style='flex:1;'>"+fotoEl(par[1])+"</div>"+
+    "</div>";
+  }).join("");
+  return "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Evidencia Fotográfica "+gasto.folio+"</title>"+
+    "<style>body{font-family:Arial,sans-serif;font-size:11px;margin:20px;} @media print{body{margin:8px;}}</style></head><body>"+
+    "<div style='text-align:center;border-bottom:2px solid #6B0F1A;padding-bottom:10px;margin-bottom:14px;'>"+
+    "<div style='display:flex;align-items:center;justify-content:center;gap:16px;'>"+
+    "<div>"+logo+"</div>"+
+    "<div><h1 style='font-size:14px;margin:0;'>H. Ayuntamiento de Tlacotalpan, Ver.</h1>"+
+    "<p style='margin:3px 0;font-size:11px;'>Tesorería Municipal — Evidencia Fotográfica</p></div></div></div>"+
+    "<div style='margin-bottom:12px;font-size:11px;'>"+
+    "<b>Folio:</b> "+gasto.folio+" | <b>Fecha:</b> "+gasto.fecha+" | "+
+    "<b>Solicitante:</b> "+gasto.solicitante+" | <b>Área:</b> "+gasto.area+"<br>"+
+    "<b>Descripción:</b> "+gasto.descripcion+"</div>"+
+    fotosHtml+
+    "</body></html>";
+}
+
 function repMostrarPanel(id, tipo, compId, ordId){
   var panel=document.getElementById("rep-panel");
   var hdr=document.getElementById("rep-panel-titulo");
@@ -2723,8 +2763,26 @@ function repMostrarPanel(id, tipo, compId, ordId){
       var tieneVB=sol.aprobadoPor||sol.estado==="APROBADO"||sol.estado==="COMPLEMENTADO"||sol.estado==="COMPLETADO";
       g1.push(tlItem("✅","Visto Bueno",sol.folio,tieneVB,"vb",sol.id,!req&&!ord));
     }
-    if(cc) g1.push(tlItem("💵","Recibo Caja Chica",cc.folio,true,"cc",cc.id,true));
+    if(cc) g1.push(tlItem("💵","Recibo Caja Chica",cc.folio,true,"cc",cc.id,!cc.facturas&&!cc.fotos));
     grupos.push(tlGroup("01 — Solicitud",g1));
+  }
+  // GRUPO CC: Evidencia de Caja Chica
+  if(cc){
+    var gCC=[];
+    var tieneFacts=cc.facturas&&cc.facturas.length>0;
+    var tieneXML=tieneFacts||(cc.xml&&cc.xml.length>0);
+    var tienePDFs=cc.pdfs&&cc.pdfs.length>0;
+    var tieneFootos=cc.fotos&&cc.fotos.length>0;
+    gCC.push(tlItem("🧾","Facturas XML",
+      tieneFacts?cc.facturas.length+" XML(s)":(cc.xml||"—"),
+      tieneXML,"cc-xml",cc.id,false));
+    gCC.push(tlItem("📄","Facturas PDF",
+      tienePDFs?cc.pdfs.length+" PDF(s)":"—",
+      tienePDFs,"cc-pdf",cc.id,false));
+    gCC.push(tlItem("📷","Evidencia Fotográfica",
+      tieneFootos?cc.fotos.length+" foto(s)":"—",
+      tieneFootos,"cc-foto",cc.id,true));
+    if(tieneXML||tienePDFs||tieneFootos) grupos.push(tlGroup("02 — Evidencia",gCC));
   }
 
   // GRUPO 2: Requisición
@@ -2835,6 +2893,38 @@ function repImpr(tipo, id){
     var cc=getCajaChica();
     var g=null;for(var i=0;i<cc.length;i++){if(cc[i].id===id){g=cc[i];break;}}
     if(g) rqAbrirVentana(ccBuildRecibo(g));
+  } else if(tipo==="cc-pdf"){
+    var cc4=getCajaChica();
+    var g4=null;for(var i=0;i<cc4.length;i++){if(cc4[i].id===id){g4=cc4[i];break;}}
+    if(g4&&g4.pdfs&&g4.pdfs.length){
+      alert("PDFs registrados en "+g4.folio+":\n\n"+g4.pdfs.map(function(p,i){return (i+1)+". "+p.nombre;}).join("\n")+"\n\nNota: Los archivos PDF se almacenan en el equipo local. Adjúntalos al expediente físico.");
+    } else {
+      toast("Sin PDFs registrados","err");
+    }
+  } else if(tipo==="cc-xml"){
+    var cc2=getCajaChica();
+    var g2=null;for(var i=0;i<cc2.length;i++){if(cc2[i].id===id){g2=cc2[i];break;}}
+    if(g2){
+      var facts=g2.facturas||[];
+      if(facts.length){
+        var info=facts.map(function(f,i){
+          return (i+1)+". "+f.folio+" | "+f.fecha+" | "+f.emisor+" | "+fmt(f.total);
+        }).join("\n");
+        alert("Facturas registradas en "+g2.folio+":\n\n"+info+"\n\nTotal: "+fmt(facts.reduce(function(s,f){return s+f.total;},0)));
+      } else if(g2.xml){
+        toast("XML: "+g2.xml,"ok");
+      } else {
+        toast("Sin facturas XML registradas","err");
+      }
+    }
+  } else if(tipo==="cc-foto"){
+    var cc3=getCajaChica();
+    var g3=null;for(var i=0;i<cc3.length;i++){if(cc3[i].id===id){g3=cc3[i];break;}}
+    if(g3&&g3.fotos&&g3.fotos.length){
+      rqAbrirVentana(ccBuildReporteFotos(g3));
+    } else {
+      toast("Sin evidencia fotográfica registrada","err");
+    }
   } else if(tipo==="op"){
     var pags=getPagos();
     var p=null;for(var i=0;i<pags.length;i++){if(pags[i].id===id){p=pags[i];break;}}
@@ -6228,7 +6318,7 @@ function ccAbrirGasto(s){
   document.getElementById("cc-monto").value="";
   var _ccdm=document.getElementById("cc-desc-modal"); if(_ccdm) _ccdm.value=s.descripcion||"";
   var _cpdf=document.getElementById("cc-pdf"); if(_cpdf) _cpdf.value="";
-  window._ccFacturas=[]; if(document.getElementById("cc-xml-inp")) document.getElementById("cc-xml-inp").value=""; ccRenderFacturas();
+  window._ccFacturas=[]; window._ccPDFs=[]; if(document.getElementById("cc-xml-inp")) document.getElementById("cc-xml-inp").value=""; if(document.getElementById("cc-pdf-inp")) document.getElementById("cc-pdf-inp").value=""; ccRenderFacturas();
   document.getElementById("cc-fotos-preview").innerHTML="";
   // Mostrar/ocultar fotos según tipo de gasto de caja chica
   var _cfot=document.getElementById("cc-fotos-section");
@@ -6347,18 +6437,39 @@ function ccAgregarFacturaXML(inp){
   reader.readAsText(file,"UTF-8");
 }
 
+function ccAgregarFacturaPDF(inp){
+  var file=inp.files[0];
+  if(!file) return;
+  if(!window._ccPDFs) window._ccPDFs=[];
+  if(window._ccPDFs.some(function(p){return p.nombre===file.name;})){
+    toast("Este PDF ya fue agregado","err"); inp.value=""; return;
+  }
+  window._ccPDFs.push({nombre:file.name});
+  inp.value="";
+  ccRenderFacturas();
+  toast("PDF agregado: "+file.name,"ok");
+}
+
 function ccRenderFacturas(){
   var lista   = document.getElementById("cc-facturas-lista");
   var totDiv  = document.getElementById("cc-facturas-total");
   var montoEl = document.getElementById("cc-monto");
   if(!lista) return;
   var facts = window._ccFacturas||[];
-  if(!facts.length){
+  var pdfs = window._ccPDFs||[];
+  if(!facts.length&&!pdfs.length){
     lista.innerHTML="<div style='font-size:11px;color:var(--text3);padding:6px 0;'>Sin facturas agregadas</div>";
     if(totDiv) totDiv.textContent="";
     return;
   }
   var total = facts.reduce(function(s,f){return s+f.total;},0);
+  var pdfHtml = pdfs.map(function(p,i){
+    return "<div style='display:flex;align-items:center;gap:8px;padding:6px 10px;background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;margin-bottom:4px;font-size:11px;'>"+
+      "<span>📄</span>"+
+      "<span style='flex:1;font-weight:600;'>"+p.nombre+"</span>"+
+      "<button class='btn bd btm' style='padding:2px 7px;' onclick='ccEliminarPDF("+i+")'>✕</button>"+
+    "</div>";
+  }).join("");
   lista.innerHTML = facts.map(function(f,i){
     return "<div style='display:flex;align-items:center;gap:8px;padding:6px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;margin-bottom:4px;font-size:11px;'>"+
       "<span style='font-weight:700;'>"+f.folio+"</span>"+
@@ -6367,7 +6478,7 @@ function ccRenderFacturas(){
       "<span style='font-weight:700;color:var(--vino);'>"+fmt(f.total)+"</span>"+
       "<button class='btn bd btm' style='padding:2px 7px;' onclick='ccEliminarFactura("+i+")'>✕</button>"+
     "</div>";
-  }).join("");
+  }).join("")+pdfHtml;
   if(totDiv){
     totDiv.textContent = facts.length+" factura"+(facts.length>1?"s":" ")+" | Total: "+fmt(total);
     totDiv.style.display="block";
@@ -6378,6 +6489,11 @@ function ccRenderFacturas(){
 
 function ccEliminarFactura(idx){
   window._ccFacturas.splice(idx,1);
+  ccRenderFacturas();
+}
+
+function ccEliminarPDF(idx){
+  if(window._ccPDFs) window._ccPDFs.splice(idx,1);
   ccRenderFacturas();
 }
 
@@ -6429,7 +6545,7 @@ function ccGuardar(){
   // Facturas múltiples acumuladas
   var ccFacturas=window._ccFacturas||[];
   var xmlNombre=ccFacturas.length?ccFacturas.map(function(f){return f.folio;}).join(", "):"";
-  var pdfNombre="";
+  var pdfNombre=window._ccPDFs&&window._ccPDFs.length?window._ccPDFs.map(function(p){return p.nombre;}).join(", "):"";
 
   function finalizarGuardado(fotos){
     var folio="CC-"+ccSolSel.folio.replace(/^SOL-/,"");
@@ -6443,7 +6559,7 @@ function ccGuardar(){
       monto:ccFacturas.length?ccFacturas.reduce(function(s,f){return s+f.total;},0):monto,
       tipoComp:tipoComp,
       viaticos:datosViaticos,
-      pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,fotos:fotos,
+      pdf:pdfNombre,xml:xmlNombre,facturas:ccFacturas,pdfs:window._ccPDFs||[],fotos:fotos,
       observaciones:obs,
       entregadoPor:SE.nombre,
       estado:"PAGADO",
