@@ -4560,12 +4560,10 @@ function rHist(){
   // Por defecto mostrar PENDIENTE; si el usuario seleccionó un estado usar ese
   // "Todos los estados" tiene value="" pero se distingue del estado inicial
   // usando el atributo data-touched del select
-  var selEs=document.getElementById("aes");
-  var touched=selEs?selEs.getAttribute("data-touched"):"";
-  var estadoEfectivo=es?(es):(touched?"":"PENDIENTE");
   var sols=getSols().filter(function(s){
-    if(SE.perfil==="SOLICITANTE"&&s.registrador!==SE.nombre) return false;
-    if(estadoEfectivo&&s.estado!==estadoEfectivo) return false;
+    // Admin y Auxiliar ven todas; Solicitante/Autorizador solo las propias
+    if(!SE.p.hist&&s.registrador!==SE.nombre) return false;
+    if(es&&s.estado!==es) return false;
     if(area&&s.area!==area) return false;
     if(de&&s.fecha<de) return false;
     if(ha&&s.fecha>ha) return false;
