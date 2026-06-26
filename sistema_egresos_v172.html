@@ -3925,7 +3925,8 @@ function rHist(){
   tb.innerHTML=sols.map(function(s,i){
     var bg=i%2?"background:#fdf2f4;":"";
     var cls=sCls(s.estado);
-    var esAdmin=SE&&(SE.p.cfg||SE.perfil==="ADMINISTRADOR");
+    var esAdmin=SE&&(SE.p&&SE.p.cfg||SE.perfil==="ADMINISTRADOR");
+    console.log("rHist row:", s.folio, "esAdmin:", esAdmin, "SE:", SE&&SE.perfil, "cfg:", SE&&SE.p&&SE.p.cfg);
     var puedeCancelar=esAdmin&&s.estado!=="CANCELADA"&&s.estado!=="CERRADO";
     var puedeEliminar=esAdmin;
     return "<tr style='"+bg+"'>"+
