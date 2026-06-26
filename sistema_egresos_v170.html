@@ -2493,6 +2493,26 @@ tr:last-child td{border-bottom:none;}
   </div>
 </div></div>
 
+
+<!-- Modal: Confirmar limpiar datos -->
+<div class="mo" id="m-limpiar-confirm"><div class="md" style="max-width:400px;">
+  <h2 style="color:#dc2626;">⚠️ Limpiar todos los datos<button class="mo-close" onclick="cm('m-limpiar-confirm')">✕</button></h2>
+  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.6;">
+    <b>Esta acción eliminará permanentemente:</b><br>
+    Solicitudes · Requisiciones · Órdenes de Compra<br>
+    Caja Chica · Combustible · Mantenimiento<br><br>
+    <b>No se puede deshacer.</b>
+  </div>
+  <div class="fi">
+    <label>Confirma con tu PIN de administrador</label>
+    <input type="password" id="limpiar-pin-confirm" placeholder="Tu PIN" maxlength="8"
+      onkeydown="if(event.key==='Enter') limpiarTodosLosDatosConfirmar()">
+  </div>
+  <div class="mf">
+    <button class="btn bo" onclick="cm('m-limpiar-confirm')">Cancelar</button>
+    <button class="btn bd" onclick="limpiarTodosLosDatosConfirmar()">🗑️ Eliminar todos los datos</button>
+  </div>
+</div></div>
 </div><!-- fin #ac -->
   </div><!-- fin main-content -->
 </div><!-- fin app-layout -->
@@ -11379,8 +11399,14 @@ function compVerOC(ordId){
 </body>
 </html
 function limpiarTodosLosDatos(){
-  if(!confirm("⚠️ ADVERTENCIA\n\nEsto borrará TODOS los datos del sistema en este navegador:\n- Solicitudes\n- Requisiciones\n- Órdenes de compra\n- Caja Chica\n- Combustible\n- Mantenimiento\n\n¿Estás seguro?")) return;
-  if(!confirm("¿CONFIRMAS que quieres borrar todos los datos? Esta acción no se puede deshacer.")) return;
+  om("m-limpiar-confirm");
+}
+
+function limpiarTodosLosDatosConfirmar(){
+  var pin = (document.getElementById("limpiar-pin-confirm")||{value:""}).value.trim();
+  var u = SE && USUARIOS.filter(function(x){return x.nombre===SE.nombre;})[0];
+  var pinCorrecto = u && u.pin && u.pin === pin;
+  if(!pinCorrecto){ toast("PIN incorrecto","err"); return; }
   var claves = [
     "egresos_sols","egresos_reqs","egresos_ords","egresos_comps",
     "egresos_pagos","egresos_cc","egresos_fondos","egresos_progs",
@@ -11388,6 +11414,7 @@ function limpiarTodosLosDatos(){
     "comb_facturas","mtto_bitacora","cc9l"
   ];
   claves.forEach(function(k){ localStorage.removeItem(k); });
-  toast("✅ Todos los datos han sido eliminados. Recarga la página.", "ok");
-  setTimeout(function(){ location.reload(); }, 2000);
+  cm("m-limpiar-confirm");
+  toast("✅ Datos eliminados. Recargando...", "ok");
+  setTimeout(function(){ location.reload(); }, 1500);
 }
