@@ -2,19 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-// Botón limpiar datos — event listener directo para evitar bloqueos
-(function(){
-  var btn = document.getElementById("btn-limpiar-datos");
-  if(btn){
-    btn.addEventListener("click", function(){
-      om("m-limpiar-confirm");
-      var pinInp = document.getElementById("limpiar-pin-confirm");
-      if(pinInp) pinInp.value = "";
-    });
-  }
-})();
-</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema de Egresos V158 - H. Ayuntamiento de Tlacotalpan</title>
@@ -2075,7 +2062,7 @@ tr:last-child td{border-bottom:none;}
 
 <!-- CATÁLOGOS -->
 <div class="sec" id="sec-catalogos">
-  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Catálogos</h3><p>Administración de fondos y programas presupuestales</p></div><div style="display:flex;gap:8px;"><button class="btn bgold" onclick="migrarDatos()" title="Subir datos locales a Supabase">☁️ Migrar a Supabase</button><button class="btn bo" onclick="pullFromSupabase().then(function(n){toast(n+' registros descargados','ok');uBadges();})" title="Descargar datos de Supabase">⬇️ Sync</button><button class="btn bd" id="btn-limpiar-datos" title="Borra todos los datos locales">🗑️ Limpiar datos</button></div></div>
+  <div class="sec-hdr"><div class="sec-hdr-txt"><h3>Catálogos</h3><p>Administración de fondos y programas presupuestales</p></div><div style="display:flex;gap:8px;"><button class="btn bgold" onclick="migrarDatos()" title="Subir datos locales a Supabase">☁️ Migrar a Supabase</button><button class="btn bo" onclick="pullFromSupabase().then(function(n){toast(n+' registros descargados','ok');uBadges();})" title="Descargar datos de Supabase">⬇️ Sync</button><button class="btn bd" onclick="limpiarTodosLosDatos()" title="Borra todos los datos locales">🗑️ Limpiar datos</button></div></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
     <div class="card">
       <div class="ct" style="justify-content:space-between;"><span class="ct-left">Fondos</span><button class="btn bp btm" onclick="om('m-fondo')">Agregar</button></div>
