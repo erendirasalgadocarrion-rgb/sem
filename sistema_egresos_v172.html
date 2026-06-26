@@ -4580,6 +4580,9 @@ function rHist(){
     var btnReq=(esAuxAdmin&&s.estado==="COMPLEMENTADO")?"<button class='btn bgold btm' onclick=\"irAReqDesdeSol('"+s.id+"')\">Crear Requisición</button> ":"";
     var btnCC="";
     var btnVer="<button class='btn bo btm' onclick=\"verDet('"+s.id+"')\">Ver detalle</button>";
+    var esAdmin2=SE&&(SE.p&&SE.p.cfg||SE.perfil==="ADMINISTRADOR");
+    var btnCancelar=(esAdmin2&&s.estado!=="CANCELADA"&&s.estado!=="CERRADO")?"<button class='btn bo btm' onclick=\"histCancelar('"+s.id+"')\">✕ Cancelar</button> ":"";
+    var btnEliminar=esAdmin2?"<button class='btn bd btm' onclick=\"histEliminar('"+s.id+"')\">🗑</button>":"";
     return "<tr>"
       +"<td><b style='color:var(--vino);cursor:pointer;text-decoration:underline;' onclick=\"verDet('"+s.id+"')\">"+s.folio+"</b></td>"
       +"<td>"+s.fecha+"</td>"
@@ -4588,7 +4591,7 @@ function rHist(){
       +"<td style='font-size:11px;'>"+s.tipo+"</td>"
       +"<td style='max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;' title='"+s.descripcion+"'>"+s.descripcion+"</td>"
       +"<td style='text-align:center;'><span class='sb "+sCls(s.estado)+"'>"+s.estado+"</span></td>"
-      +"<td><div class='flex-btns'>"+btnComp+btnReq+btnImprimir+btnVer+"</div></td>"
+      +"<td><div class='flex-btns'>"+btnComp+btnReq+btnImprimir+btnVer+btnCancelar+btnEliminar+"</div></td>"
       +"</tr>";
   }).join("")||"<tr><td colspan='8' style='text-align:center;color:var(--text3);padding:24px;'>No hay solicitudes registradas</td></tr>";
 }
