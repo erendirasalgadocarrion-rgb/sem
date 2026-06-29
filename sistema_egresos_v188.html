@@ -962,7 +962,7 @@ tr:last-child td{border-bottom:none;}
     </div>
     <div class="tw"><table>
       <thead><tr>
-        <th>Folio Req.</th><th>Fecha</th><th>Área</th><th>Solicitante</th>
+        <th>Folio Req.</th><th>Fecha</th><th>Descripción</th><th>Solicitante</th>
         <th>Tipo Pago</th><th style="text-align:center;">Artículos</th>
         <th style="text-align:center;">Estado</th>
         <th style="text-align:center;white-space:nowrap;width:1%;min-width:120px;">Acciones</th>
@@ -4587,7 +4587,7 @@ function rHist(){
     var puedeComp=esAuxAdmin&&(s.estado==="APROBADO"||s.estado==="COMPLEMENTADO");
     var btnComp=puedeComp?"<button class='btn bl btm' onclick=\"abrirComp('"+s.id+"')\">📋 Complementar</button> ":"";
     var btnImprimir="<button class='btn bgold btm' onclick=\"imprimirSolDesdeHist('"+s.id+"')\">🖨️ Imprimir</button>";
-    var btnReq=(esAuxAdmin&&s.estado==="COMPLEMENTADO")?"<button class='btn bgold btm' onclick=\"irAReqDesdeSol('"+s.id+"')\">📄 Requisición</button> ":"";
+    var btnReq="";
     var btnCC="";
     var btnVer="";
     // Botón siguiente paso (vino)
@@ -4649,7 +4649,7 @@ function rSolComplementar(){
       +"<td style='font-size:11px;'>"+s.registrador+"</td>"
       +"<td style='font-size:11px;'>"+s.tipo+"</td>"
       +"<td style='font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'>"+s.descripcion+"</td>"
-      +"<td style='text-align:center;'><span class='sb sc'>APROBADO</span></td>"
+      +"<td style='text-align:center;'><span class='sb sa'>APROBADO</span></td>"
       +"<td style='text-align:center;'><button class='btn bl btm' onclick=\"abrirComp('"+s.id+"')\">📋 Complementar</button></td>"
       +"</tr>";
   }).join(""):"<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:40px;'>"
@@ -4873,7 +4873,7 @@ function rReqVisualizar(){
       +"<td style='font-size:11px;'>"+(r.proveedor||"—")+"</td>"
       +"<td style='text-align:right;font-weight:700;'>"+fmt(r.total||0)+"</td>"
       +"<td><span class='sb "+sCls(r.estado)+"'>"+r.estado+"</span></td>"
-      +"<td style='text-align:center;white-space:nowrap;'> <button class='btn bgold btm' onclick=\"rqImprimirDet('"+r.id+"')\">🖨️ Imprimir</button>"+(btnSigReq?" "+btnSigReq:"")+"</td>"
+      +"<td style='text-align:center;'><div style='display:flex;flex-direction:column;gap:4px;'><button class='btn bgold btm' onclick=\"rqImprimirDet('"+ r.id+"')\">🖨️ Imprimir</button>"+(btnSigReq?btnSigReq:"")+"</div></td>"
       +"</tr>";
   }).join(""):"<tr><td colspan='7' style='text-align:center;color:var(--text3);padding:24px;'>No hay requisiciones</td></tr>";
 }
@@ -5582,7 +5582,7 @@ function rListaReq(){
       +"<td style='font-size:11px;'>"+r.fondo+"</td>"
       +"<td style='text-align:right;font-weight:700;color:var(--vino);'>"+fmt(r.total)+"</td>"
       +"<td style='text-align:center;'><span class='sb "+sCls(r.estado)+"'>"+r.estado+"</span></td>"
-      +"<td><div style='display:flex;flex-direction:column;gap:4px;'>"+"<button class='btn bw btm' onclick=\"rqEditarReq('"+r.id+"')\">✏️ Editar</button>"+(r.estado==='PENDIENTE'||r.estado==='EN ADQUISICION'||r.estado==='COMPLETADO'||r.estado==='REQUISITADO'?"<button class='btn bgold btm' onclick=\"irAAdqDesdeReq('"+r.id+"')\">📦 Crear OC</button>":"")+"</div></td>"
+      +"<td><div style='display:flex;flex-direction:column;gap:4px;'>"+"<button class='btn bw btm' onclick=\"rqEditarReq('"+ r.id+"')\">✏️ Editar</button>"+"</div></td>"
       +"</tr>";
   }).join(""):
   "<tr><td colspan='9' style='text-align:center;color:var(--text3);padding:24px;'>No hay requisiciones</td></tr>";
@@ -9703,7 +9703,7 @@ function rAdqCrear(){
     return "<tr>"
       +"<td><b style='color:var(--vino);'>"+r.folio+"</b></td>"
       +"<td>"+r.fecha+"</td>"
-      +"<td style='font-size:11px;'>"+r.area+"</td>"
+      +"<td style='font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' title='"+(r.descripcion||"")+ "'>"+(r.descripcion||"—")+"</td>"
       +"<td style='font-size:11px;'>"+r.solicitante+"</td>"
       +"<td style='font-size:11px;'>"+(r.tipoPago||"")+"</td>"
       +"<td style='text-align:center;'>"
@@ -9713,7 +9713,6 @@ function rAdqCrear(){
       +"<td style='text-align:center;'>"
       +"<div style='display:flex;gap:4px;justify-content:center;flex-wrap:wrap;'>"
       +"<button class='btn bp btm' onclick='adqNuevaOrden(\""+r.id+"\")'>📦 Crear OC</button>"
-      +"<button class='btn bo btm' onclick='adqCerrarReq(\""+r.id+"\")'>✓ Cerrar</button>"
       +"</div>"
       +"</td></tr>";
   }).join(""):"<tr><td colspan='8' style='text-align:center;color:var(--text3);padding:24px;'>No hay requisiciones pendientes de orden de compra</td></tr>";
@@ -9832,8 +9831,7 @@ function rAdqVisualizar(){
     return "<tr>"+adqFmtFila(o)
       +"<td style='text-align:center;'>"
       +"<div style='display:flex;gap:4px;justify-content:center;flex-wrap:wrap;'>"
-      +"<button class='btn bw btm' onclick='adqAbrirMod(\""+o.id+"\")'>✏️ Editar</button>"
-      +"<button class='btn bo btm' onclick='adqImprimir(\""+o.id+"\")'>🖨️ Imprimir</button>"
+      +"<button class='btn bgold btm' onclick='adqImprimir(\""+o.id+"\")'>🖨️ Imprimir</button>"
       +(btnSigOC?" "+btnSigOC:"")
       +"</div>"
       +"</td></tr>";
